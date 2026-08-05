@@ -352,7 +352,13 @@ function buildEditor() {
     // map needs no rebuild. The Tanawin circle is an overlay stored as
     // percentages: tap the picture to move it, so a new map just needs a
     // fresh tap, never image editing.
+    // markerTouched: only include the circle in the save when Lexi actually
+    // moved or removed it. An untouched save must OMIT the field so the
+    // merge-on-save keeps whatever the DB has — an editor that happened to
+    // load while the circle was missing must not re-delete it on every save
+    // (that's how the circle vanished twice on 2026-08-05).
     let marker = v.marker ? { ...v.marker } : null;
+    let markerTouched = false;
     const mapWrap = document.createElement('div');
     mapWrap.className = 'ed-field';
     const mapLabel = document.createElement('label');
@@ -387,6 +393,7 @@ function buildEditor() {
       drawRing();
       img.style.cursor = 'crosshair';
       img.onclick = e => {
+        markerTouched = true;
         const r = img.getBoundingClientRect();
         marker = {
           x: +(((e.clientX - r.left) / r.width) * 100).toFixed(1),
@@ -403,7 +410,7 @@ function buildEditor() {
       const clearBtn = document.createElement('button');
       clearBtn.className = 'review-btn';
       clearBtn.textContent = 'Remove circle';
-      clearBtn.onclick = () => { marker = null; drawRing(); };
+      clearBtn.onclick = () => { markerTouched = true; marker = null; drawRing(); };
       mapWrap.appendChild(clearBtn);
     }
     const file = document.createElement('input');
@@ -423,7 +430,9 @@ function buildEditor() {
         if (error) return toast(`Map upload failed: ${error.message}`, true);
         imageUrl = `${ASSETS_BASE}/${path}?v=${Date.now()}`;
       }
-      const ok = await save(key, { intro: intro.value.trim(), directions: getRows(), image_url: imageUrl, marker });
+      const payload = { intro: intro.value.trim(), directions: getRows(), image_url: imageUrl };
+      if (markerTouched) payload.marker = marker;
+      const ok = await save(key, payload);
       if (ok && file.files && file.files[0]) buildEditor();
     });
     root.appendChild(div);
