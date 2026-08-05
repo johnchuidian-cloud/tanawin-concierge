@@ -1,0 +1,146 @@
+/* Concierge staff content editor — builds on styles.css variables. */
+
+.topbar-tag {
+  font-weight: 400;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  margin-left: 0.4rem;
+}
+.topbar-right { display: flex; gap: 0.5rem; align-items: center; }
+.hub-btn {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--cream-on-maroon);
+  border: none;
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.82rem;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+#loginPicker { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.6rem 0 1rem; }
+.picker-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.7rem 2.2rem;
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--ink);
+}
+#loginPin {
+  margin-top: 0.4rem;
+  width: 8rem;
+  padding: 0.6rem 0.5rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  text-align: center;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+}
+#loginPin:focus { border-color: var(--maroon-soft); }
+
+.ed-note {
+  background: var(--sand);
+  border-radius: 12px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.ed-block {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.1rem 1.15rem;
+  margin-bottom: 1rem;
+}
+.ed-block h2 { margin: 0 0 0.2rem; font-size: 1.02rem; color: var(--maroon); }
+.ed-reviewed { font-size: 0.78rem; color: var(--ink-muted); margin: 0 0 0.7rem; }
+
+.ed-field { margin-bottom: 0.65rem; }
+.ed-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 0.2rem;
+}
+.ed-field input, .ed-field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--cream);
+}
+.ed-field textarea { min-height: 5.5rem; resize: vertical; }
+.ed-field input:focus, .ed-field textarea:focus { outline: none; border-color: var(--maroon-soft); }
+
+.ed-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-start; }
+.ed-row input { flex: 1; }
+.row-del {
+  border: none;
+  background: var(--sand);
+  color: var(--maroon);
+  border-radius: 8px;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.ed-add {
+  border: 1px dashed var(--line);
+  background: none;
+  color: var(--ink-muted);
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}
+
+.ed-actions { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
+.save-btn {
+  background: var(--maroon);
+  color: var(--cream-on-maroon);
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 1.3rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.save-btn:disabled { opacity: 0.6; }
+.review-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.map-preview { max-width: 260px; border-radius: 10px; display: block; margin: 0.4rem 0; }
+
+.toast {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.9rem;
+  z-index: 50;
+}
+.toast.error { background: var(--maroon); }

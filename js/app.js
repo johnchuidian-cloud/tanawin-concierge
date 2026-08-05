@@ -1,0 +1,270 @@
+// Tanawin Concierge — guest app (Tanawin Info, Phase 1).
+//
+// Flow: a room access code (from the printed card's QR ?code= param, or typed
+// once) is validated by the concierge_bootstrap RPC, which also returns all
+// content. The code persists in localStorage — guest convenience, not a
+// security boundary (handoff §3, accepted deliberately).
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+
+const CODE_KEY = 'concierge_code';
+let roomCode = null;
+
+// ---------- boot ----------
+
+(async function boot() {
+  const params = new URLSearchParams(location.search);
+  const urlCode = (params.get('code') || '').replace(/\D/g, '');
+  if (urlCode) {
+    // Strip the code from the address bar so shares/screenshots don't carry it.
+    history.replaceState(null, '', location.pathname);
+  }
+  const candidate = urlCode || localStorage.getItem(CODE_KEY) || '';
+  if (candidate.length === 6 && await tryCode(candidate)) return;
+  showGate();
+})();
+
+async function tryCode(code) {
+  try {
+    const { data, error } = await db.rpc('concierge_bootstrap', { p_access_code: code });
+    if (error || !data || !data.ok) return false;
+    roomCode = code;
+    localStorage.setItem(CODE_KEY, code);
+    render(data);
+    $('gate').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function showGate() {
+  $('app').classList.add('hidden');
+  $('gate').classList.remove('hidden');
+  $('gateCode').focus();
+}
+
+$('gateCode').addEventListener('input', async e => {
+  const code = e.target.value.replace(/\D/g, '').slice(0, 6);
+  e.target.value = code;
+  $('gateError').classList.add('hidden');
+  if (code.length !== 6) return;
+  $('gateBusy').classList.remove('hidden');
+  const ok = await tryCode(code);
+  $('gateBusy').classList.add('hidden');
+  if (!ok) {
+    e.target.value = '';
+    $('gateError').classList.remove('hidden');
+  }
+});
+
+$('switchRoom').onclick = () => {
+  localStorage.removeItem(CODE_KEY);
+  location.reload();
+};
+
+// ---------- render ----------
+
+function block(content, key) {
+  const b = content[key];
+  return b ? { v: b.value || {}, reviewed: b.last_reviewed || null } : { v: {}, reviewed: null };
+}
+
+function render(data) {
+  $('roomChip').textContent = data.room.name;
+  const c = data.content || {};
+
+  renderWifi(block(c, 'wifi').v);
+  renderPools(block(c, 'pool_hours'));
+  renderMap(block(c, 'getting_around').v);
+  renderKeyInfo(block(c, 'key_info').v);
+  renderContact(block(c, 'contact').v);
+  renderRules(block(c, 'house_rules').v);
+
+  // Hand the code to Menu so the guest never retypes it at checkout.
+  $('menuLink').href = `${MENU_URL}/?code=${encodeURIComponent(roomCode)}`;
+}
+
+function renderWifi(v) {
+  const nets = (v.networks || []).filter(n => n && n.name);
+  const wrap = $('wifiNets');
+  wrap.innerHTML = '';
+  $('wifiEmpty').classList.toggle('hidden', nets.length > 0);
+  nets.forEach(net => {
+    const div = document.createElement('div');
+    div.className = 'wifi-net';
+    const info = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'wifi-name';
+    name.textContent = net.name;
+    info.appendChild(name);
+    if (net.password) {
+      const row = document.createElement('div');
+      row.className = 'wifi-pass-row';
+      const pass = document.createElement('span');
+      pass.className = 'wifi-pass';
+      pass.textContent = net.password;
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(net.password);
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+        } catch { /* clipboard unavailable — the password is visible anyway */ }
+      };
+      row.appendChild(pass);
+      row.appendChild(btn);
+      info.appendChild(row);
+    }
+    div.appendChild(info);
+    const qrEl = wifiQr(net);
+    if (qrEl) div.appendChild(qrEl);
+    wrap.appendChild(div);
+  });
+}
+
+// Standard WIFI: QR — scan with the phone camera to join. Regenerates from
+// the stored values whenever Lexi changes them.
+function wifiQr(net) {
+  if (typeof qrcode !== 'function' || !net.password) return null;
+  try {
+    const esc = s => String(s).replace(/([\\;,:"])/g, '\\$1');
+    const qr = qrcode(0, 'M');
+    qr.addData(`WIFI:T:WPA;S:${esc(net.name)};P:${esc(net.password)};;`);
+    qr.make();
+    const holder = document.createElement('div');
+    holder.className = 'wifi-qr';
+    holder.innerHTML = qr.createSvgTag({ cellSize: 2.6, margin: 2 });
+    const label = document.createElement('div');
+    label.className = 'wifi-qr-label';
+    label.textContent = 'Scan to join';
+    holder.appendChild(label);
+    return holder;
+  } catch {
+    return null;
+  }
+}
+
+function renderPools(b) {
+  const v = b.v;
+  $('poolIntro').textContent = v.intro || '';
+  const list = $('poolList');
+  list.innerHTML = '';
+  (v.pools || []).forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'pool-row';
+    const left = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'pool-name';
+    name.textContent = p.name;
+    const loc = document.createElement('div');
+    loc.className = 'pool-loc';
+    loc.textContent = p.location || '';
+    left.appendChild(name);
+    left.appendChild(loc);
+    const hours = document.createElement('div');
+    hours.className = 'pool-hours';
+    hours.textContent = p.hours || '';
+    row.appendChild(left);
+    row.appendChild(hours);
+    list.appendChild(row);
+  });
+  $('poolTip').textContent = v.tip || '';
+  $('poolTip').classList.toggle('hidden', !v.tip);
+  // Third-party content: show the quiet staleness note (handoff §10).
+  $('poolAsOf').textContent = b.reviewed
+    ? `As of ${b.reviewed} — please confirm at the front desk.`
+    : '';
+}
+
+function renderMap(v) {
+  $('mapIntro').textContent = v.intro || '';
+  const list = $('mapDirections');
+  list.innerHTML = '';
+  (v.directions || []).forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'dir-row';
+    const place = document.createElement('div');
+    place.className = 'dir-place';
+    place.textContent = d.place;
+    const walk = document.createElement('div');
+    walk.className = 'dir-walk';
+    walk.textContent = d.walk || '';
+    row.appendChild(place);
+    row.appendChild(walk);
+    list.appendChild(row);
+  });
+  const img = $('mapImage');
+  if (v.image_url) {
+    img.src = v.image_url;
+    img.classList.remove('hidden');
+  } else {
+    img.classList.add('hidden');
+  }
+}
+
+function renderKeyInfo(v) {
+  const list = $('keyList');
+  list.innerHTML = '';
+  (v.items || []).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    const label = document.createElement('div');
+    label.className = 'key-label';
+    label.textContent = item.label;
+    const value = document.createElement('div');
+    value.className = 'key-value';
+    value.textContent = item.value;
+    row.appendChild(label);
+    row.appendChild(value);
+    list.appendChild(row);
+  });
+}
+
+function renderContact(v) {
+  const list = $('contactList');
+  list.innerHTML = '';
+  const entries = [];
+  if (v.globe) entries.push({ label: 'Call (Globe)', value: v.globe, href: `tel:${v.globe.replace(/\s/g, '')}` });
+  if (v.smart) entries.push({ label: 'Call (Smart)', value: v.smart, href: `tel:${v.smart.replace(/\s/g, '')}` });
+  if (v.messenger) entries.push({ label: 'Messenger', value: `m.me/${v.messenger}`, href: `https://m.me/${v.messenger}` });
+  if (v.viber) entries.push({ label: 'Viber', value: v.viber, href: `viber://chat?number=%2B${v.viber.replace(/\D/g, '')}` });
+  $('contactEmpty').classList.toggle('hidden', entries.length > 0);
+  entries.forEach(e => {
+    const a = document.createElement('a');
+    a.className = 'contact-btn';
+    a.href = e.href;
+    const strong = document.createElement('strong');
+    strong.textContent = e.label;
+    const span = document.createElement('span');
+    span.textContent = e.value;
+    a.appendChild(strong);
+    a.appendChild(span);
+    list.appendChild(a);
+  });
+}
+
+function renderRules(v) {
+  const list = $('rulesList');
+  list.innerHTML = '';
+  (v.sections || []).forEach(sec => {
+    const div = document.createElement('div');
+    div.className = 'rules-sec';
+    const h = document.createElement('h3');
+    h.textContent = sec.title;
+    div.appendChild(h);
+    const ul = document.createElement('ul');
+    (sec.items || []).forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+    div.appendChild(ul);
+    list.appendChild(div);
+  });
+}

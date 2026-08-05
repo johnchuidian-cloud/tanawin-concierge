@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#9A3518">
+  <title>Tanawin Concierge</title>
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ============ Code gate (shown until a valid room code is known) ============ -->
+  <div id="gate" class="gate hidden">
+    <img class="gate-logo" src="assets/tanawin-icon.jpg" alt="Tanawin">
+    <div class="logo-mark gate-word">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n</div>
+    <p class="gate-sub">Guest Services</p>
+    <p class="gate-hint">Enter the 6-digit access code from your room card or ring binder.</p>
+    <input id="gateCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
+    <p id="gateError" class="gate-error hidden">That code doesn't look right — please check the card in your room, or ask the front desk.</p>
+    <p id="gateBusy" class="gate-busy hidden">Checking…</p>
+  </div>
+
+  <!-- ============ The app ============ -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="logo-mark">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n</div>
+      <div class="topbar-right">
+        <span id="roomChip" class="room-chip"></span>
+      </div>
+    </header>
+
+    <main id="content">
+
+      <!-- Wifi -->
+      <section class="card" id="wifiCard">
+        <h2><span class="card-ico">&#128246;</span> Wifi</h2>
+        <div id="wifiNets"></div>
+        <p id="wifiEmpty" class="muted hidden">Wifi details will appear here soon — ask the front desk for the current password.</p>
+      </section>
+
+      <!-- Pool hours -->
+      <section class="card" id="poolCard">
+        <h2><span class="card-ico">&#127946;</span> Pool hours</h2>
+        <p id="poolIntro" class="muted"></p>
+        <div id="poolList"></div>
+        <p id="poolTip" class="tip"></p>
+        <p id="poolAsOf" class="asof"></p>
+      </section>
+
+      <!-- Getting around -->
+      <section class="card" id="mapCard">
+        <h2><span class="card-ico">&#129517;</span> Getting around Sinagtala</h2>
+        <p id="mapIntro"></p>
+        <div id="mapDirections"></div>
+        <img id="mapImage" class="map-img hidden" alt="Sinagtala guide map" loading="lazy">
+      </section>
+
+      <!-- Good to know -->
+      <section class="card" id="keyCard">
+        <h2><span class="card-ico">&#128337;</span> Good to know</h2>
+        <div id="keyList"></div>
+      </section>
+
+      <!-- Order food handoff -->
+      <section class="card link-card" id="menuCard">
+        <a id="menuLink" href="#">
+          <span class="card-ico">&#127859;</span>
+          <span><strong>Hungry?</strong><br><span class="muted">Order food to your room from the Tanawin Menu</span></span>
+          <span class="arrow">&#8594;</span>
+        </a>
+      </section>
+
+      <!-- Contact -->
+      <section class="card" id="contactCard">
+        <h2><span class="card-ico">&#128222;</span> Contact the front desk</h2>
+        <div id="contactList"></div>
+        <p id="contactEmpty" class="muted hidden">Front desk contact details will appear here soon.</p>
+      </section>
+
+      <!-- House rules -->
+      <section class="card" id="rulesCard">
+        <h2><span class="card-ico">&#127794;</span> House rules</h2>
+        <div id="rulesList"></div>
+      </section>
+
+      <footer class="footer">
+        <p>Tanawin Bed &amp; Breakfast · Sinagtala, Brgy Tala, Orani, Bataan</p>
+        <p><button id="switchRoom" class="linklike">Use a different room code</button></p>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

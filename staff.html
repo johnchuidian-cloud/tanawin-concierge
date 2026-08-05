@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#9A3518">
+  <title>Tanawin Concierge — Content</title>
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/staff.css">
+</head>
+<body>
+
+  <!-- ============ Login (mirrors Menu's staff login — same auth accounts) ============ -->
+  <div id="login" class="gate hidden">
+    <img class="gate-logo" src="assets/tanawin-icon.jpg" alt="Tanawin">
+    <div class="logo-mark gate-word">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n</div>
+    <p class="gate-sub">Concierge Content</p>
+    <div id="loginPicker"></div>
+    <div id="loginPinWrap" class="hidden">
+      <p class="gate-hint" id="loginWho"></p>
+      <input id="loginPin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="PIN">
+      <p id="loginError" class="gate-error hidden"></p>
+      <p><button id="pickSomeoneElse" class="linklike">Someone else</button></p>
+    </div>
+    <p class="gate-hint muted">Content editing is admin-only. Same name and PIN as the Menu dashboard.</p>
+  </div>
+
+  <!-- ============ Editor ============ -->
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="logo-mark">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n <span class="topbar-tag">Concierge content</span></div>
+      <div class="topbar-right">
+        <a class="hub-btn" id="hubBtn" href="#" title="Tanawin Hub">&#8962; Hub</a>
+        <button id="logoutBtn" class="hub-btn">Log out</button>
+      </div>
+    </header>
+
+    <main id="editor">
+      <p class="ed-note">Whatever you save here is what guests see, immediately. The
+      "reviewed" date shows guests how fresh third-party info is (pools, prices) —
+      tap <em>Mark reviewed</em> whenever you've confirmed a block is still correct.</p>
+      <div id="blocks"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/staff.js"></script>
+</body>
+</html>

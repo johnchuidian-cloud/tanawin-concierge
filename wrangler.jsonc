@@ -1,0 +1,12 @@
+// Cloudflare Workers (static assets) config for the git-connected build.
+// Concierge follows Menu's pattern: a plain multi-page static site
+// (index.html + staff.html, no build step) — an assets-only worker serving
+// the repo root. NOTE: not a single-page app — leave not_found_handling at
+// the default so /staff resolves to its own file.
+{
+  "name": "tanawin-concierge",
+  "compatibility_date": "2026-08-05",
+  "assets": {
+    "directory": "./"
+  }
+}
