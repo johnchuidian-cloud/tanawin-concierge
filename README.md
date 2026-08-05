@@ -19,6 +19,12 @@ getting-around directions + swappable map, key facts (staff hours, last call,
 breakfast, checkout), front-desk contact buttons, house rules, and a hand-off
 link to the Menu app that carries the room code so guests never retype it.
 
+**Admin preview:** the editor's "👁 Guest view" button opens `/?preview=1` in a
+new tab — it reuses the editor's login session to render the guest view exactly
+as guests see it (plus a bottom banner with a back link), no room code needed.
+Without a staff session the flag is inert and falls through to the normal code
+gate, so guests can never reach or even detect it.
+
 Phases 2 (requests + combined staff queue in Menu's dashboard) and 3 (Tala
 Massage, adventure tickets) come later — see the build handoff.
 

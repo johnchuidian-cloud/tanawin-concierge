@@ -22,6 +22,15 @@
     <p id="gateBusy" class="gate-busy hidden">Checking…</p>
   </div>
 
+  <!-- Admin-only preview banner: shown when a logged-in admin opens
+       index.html?preview=1 from the editor. Guests can never see it —
+       without a staff session the preview flag just falls through to the
+       normal code gate. -->
+  <div id="previewBar" class="preview-bar hidden">
+    <span>Admin preview — this is exactly what guests see.</span>
+    <a href="staff.html">Back to editor</a>
+  </div>
+
   <!-- ============ The app ============ -->
   <div id="app" class="hidden">
     <header class="topbar">

@@ -15,6 +15,7 @@ let roomCode = null;
 
 (async function boot() {
   const params = new URLSearchParams(location.search);
+  if (params.get('preview') === '1' && await tryPreview()) return;
   const urlCode = (params.get('code') || '').replace(/\D/g, '');
   if (urlCode) {
     // Strip the code from the address bar so shares/screenshots don't carry it.
@@ -32,6 +33,29 @@ async function tryCode(code) {
     roomCode = code;
     localStorage.setItem(CODE_KEY, code);
     render(data);
+    $('gate').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Admin preview: reuses the staff editor's login session (same origin, same
+// Supabase project) to read content directly — no room code needed. Renders
+// the guest view byte-for-byte, plus a banner only the admin sees.
+async function tryPreview() {
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return false;
+    const { data: rows, error } = await db.from('concierge_content')
+      .select('key, value, last_reviewed');
+    if (error || !rows || !rows.length) return false;
+    const content = {};
+    rows.forEach(r => { content[r.key] = { value: r.value, last_reviewed: r.last_reviewed }; });
+    render({ room: { name: 'Guest preview' }, content });
+    $('previewBar').classList.remove('hidden');
+    $('switchRoom').parentElement.classList.add('hidden');
     $('gate').classList.add('hidden');
     $('app').classList.remove('hidden');
     return true;
@@ -84,7 +108,10 @@ function render(data) {
   renderRules(block(c, 'house_rules').v);
 
   // Hand the code to Menu so the guest never retypes it at checkout.
-  $('menuLink').href = `${MENU_URL}/?code=${encodeURIComponent(roomCode)}`;
+  // (No code in admin preview — plain Menu link.)
+  $('menuLink').href = roomCode
+    ? `${MENU_URL}/?code=${encodeURIComponent(roomCode)}`
+    : MENU_URL;
 }
 
 function renderWifi(v) {
