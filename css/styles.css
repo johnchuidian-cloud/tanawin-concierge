@@ -250,17 +250,65 @@ main {
 .key-label { font-weight: 600; }
 .key-value { color: var(--ink-soft); font-size: 0.92rem; }
 
-/* menu handoff */
-.link-card { padding: 0; overflow: hidden; }
+/* menu handoff — light terracotta so it never drowns among the info cards
+   (Lexi's ask). Tinted background + terracotta border, maroon text for
+   contrast; the icon sits in a terracotta coin. */
+.link-card {
+  padding: 0;
+  overflow: hidden;
+  background: #F6DFD3;
+  border-color: var(--maroon-light);
+}
 .link-card a {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  padding: 1rem 1.15rem;
+  padding: 1.15rem;
   color: var(--ink);
   text-decoration: none;
 }
-.link-card .arrow { margin-left: auto; color: var(--maroon); font-size: 1.3rem; }
+.link-card strong { color: var(--maroon); font-size: 1.15rem; }
+.menu-sub { color: var(--ink-soft); font-size: 0.92rem; }
+.menu-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--maroon-light);
+  font-size: 1.35rem;
+}
+.link-card .arrow { margin-left: auto; color: var(--maroon); font-size: 1.4rem; }
+
+/* side tabs — fixed right-edge rail for jumping between sections */
+.rail {
+  position: fixed;
+  right: calc(0.4rem + env(safe-area-inset-right));
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.rail button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 1.05rem;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(31, 27, 22, 0.12);
+}
+.rail .rail-menu { background: var(--maroon-light); border-color: var(--maroon-light); }
+main .card { scroll-margin-top: 4.2rem; }
+@media (max-width: 767px) {
+  #app main { padding-right: 3.6rem; }
+}
 
 /* contact */
 .contact-btn {

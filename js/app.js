@@ -123,27 +123,29 @@ function setFmt(el, text) {
   el.appendChild(fmt(text));
 }
 
-// Lexi's appearance settings (the `display` content block): text scale and
-// a background limited to the brand tones.
-const TEXT_SCALES = { normal: '100%', large: '112%', xlarge: '125%' };
-const BACKGROUNDS = { cream: '#FBFAF6', sand: '#F4F1E7', deep: '#E8E2D0', white: '#FFFFFF' };
-
-function applyDisplay(v) {
-  document.documentElement.style.fontSize = TEXT_SCALES[v.text_scale] || '100%';
-  document.body.style.background = BACKGROUNDS[v.background] || '';
-}
+// Side tabs: jump-scroll to each section.
+document.querySelectorAll('#rail button').forEach(btn => {
+  btn.onclick = () => {
+    const el = document.getElementById(btn.dataset.target);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+});
 
 function render(data) {
   $('roomChip').textContent = data.room.name;
   const c = data.content || {};
 
-  applyDisplay(block(c, 'display').v);
   renderWifi(block(c, 'wifi').v);
   renderPools(block(c, 'pool_hours'));
   renderMap(block(c, 'getting_around').v);
   renderKeyInfo(block(c, 'key_info').v);
   renderContact(block(c, 'contact').v);
   renderRules(block(c, 'house_rules').v);
+
+  // The Menu card's wording is Lexi-editable (menu_card block).
+  const mc = block(c, 'menu_card').v;
+  if (mc.title) setFmt($('menuTitle'), mc.title);
+  if (mc.subtitle) setFmt($('menuSub'), mc.subtitle);
 
   // Hand the code to Menu so the guest never retypes it at checkout.
   // (No code in admin preview — plain Menu link.)

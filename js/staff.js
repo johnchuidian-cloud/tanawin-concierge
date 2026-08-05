@@ -243,69 +243,6 @@ function buildEditor() {
   const root = $('blocks');
   root.innerHTML = '';
 
-  // Appearance — guest-view text size + background (brand tones only, so the
-  // app can't drift off-palette). Values live in the `display` block.
-  {
-    const key = 'display';
-    const div = blockShell('Appearance (guest view)', key,
-      'How the guest app looks. Save, then tap Guest view to check.');
-    const v = val(key);
-    let scale = v.text_scale || 'normal';
-    let bg = v.background || 'cream';
-
-    const sizeWrap = document.createElement('div');
-    sizeWrap.className = 'ed-field';
-    const sizeLabel = document.createElement('label');
-    sizeLabel.textContent = 'Text size';
-    sizeWrap.appendChild(sizeLabel);
-    const sizeBar = document.createElement('div');
-    sizeBar.className = 'choice-bar';
-    [['normal', 'Normal'], ['large', 'Large'], ['xlarge', 'Extra large']].forEach(([valKey, label]) => {
-      const btn = document.createElement('button');
-      btn.className = 'choice-btn' + (scale === valKey ? ' selected' : '');
-      btn.textContent = label;
-      btn.onclick = () => {
-        scale = valKey;
-        sizeBar.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-      };
-      sizeBar.appendChild(btn);
-    });
-    sizeWrap.appendChild(sizeBar);
-    div.appendChild(sizeWrap);
-
-    const bgWrap = document.createElement('div');
-    bgWrap.className = 'ed-field';
-    const bgLabel = document.createElement('label');
-    bgLabel.textContent = 'Background';
-    bgWrap.appendChild(bgLabel);
-    const bgBar = document.createElement('div');
-    bgBar.className = 'choice-bar';
-    [['cream', '#FBFAF6', 'Cream'], ['sand', '#F4F1E7', 'Warm sand'], ['deep', '#E8E2D0', 'Deeper sand'], ['white', '#FFFFFF', 'White']].forEach(([valKey, color, label]) => {
-      const btn = document.createElement('button');
-      btn.className = 'swatch' + (bg === valKey ? ' selected' : '');
-      btn.style.background = color;
-      btn.title = label;
-      btn.setAttribute('aria-label', label);
-      btn.onclick = () => {
-        bg = valKey;
-        bgBar.querySelectorAll('.swatch').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-      };
-      bgBar.appendChild(btn);
-    });
-    bgWrap.appendChild(bgBar);
-    div.appendChild(bgWrap);
-
-    const fmtHint = document.createElement('p');
-    fmtHint.className = 'ed-reviewed';
-    fmtHint.textContent = 'Tip: in any text you type anywhere in this editor, **word** shows bold to guests, __word__ italic, ++word++ underlined — same as Telegram.';
-    div.appendChild(fmtHint);
-
-    actions(div, key, () => save(key, { text_scale: scale, background: bg }));
-    root.appendChild(div);
-  }
-
   // Wifi — up to two slots; only populated ones show to guests.
   {
     const key = 'wifi';
@@ -448,6 +385,21 @@ function buildEditor() {
       [{ key: 'label', placeholder: 'Label' }, { key: 'value', placeholder: 'Details' }],
       '+ Add item');
     actions(div, key, () => save(key, { items: getRows() }));
+    root.appendChild(div);
+  }
+
+  // The "Hungry?" Menu card — its wording is editable; the link itself is not
+  // (it always goes to the Menu app with the guest's room code attached).
+  {
+    const key = 'menu_card';
+    const div = blockShell('"Hungry?" card (link to the Menu)', key,
+      'The terracotta card that sends guests to the Tanawin Menu. Wording only — the link always carries the guest\'s room code.');
+    const v = val(key);
+    const title = textInput(v.title, 'Hungry?');
+    const subtitle = textInput(v.subtitle, 'Order food to your room from the Tanawin Menu');
+    div.appendChild(field('Big text', title));
+    div.appendChild(field('Small text', subtitle));
+    actions(div, key, () => save(key, { title: title.value.trim(), subtitle: subtitle.value.trim() }));
     root.appendChild(div);
   }
 

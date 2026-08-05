@@ -40,6 +40,17 @@
       </div>
     </header>
 
+    <!-- Side tabs: jump between sections without scrolling hunt -->
+    <nav id="rail" class="rail" aria-label="Jump to section">
+      <button data-target="wifiCard" title="Wifi" aria-label="Wifi">&#128246;</button>
+      <button data-target="poolCard" title="Pool hours" aria-label="Pool hours">&#127946;</button>
+      <button data-target="mapCard" title="Getting around" aria-label="Getting around">&#129517;</button>
+      <button data-target="keyCard" title="Good to know" aria-label="Good to know">&#128337;</button>
+      <button class="rail-menu" data-target="menuCard" title="Order food" aria-label="Order food">&#127859;</button>
+      <button data-target="contactCard" title="Contact" aria-label="Contact">&#128222;</button>
+      <button data-target="rulesCard" title="House rules" aria-label="House rules">&#127794;</button>
+    </nav>
+
     <main id="content">
 
       <!-- Wifi -->
@@ -75,11 +86,11 @@
         <div id="keyList"></div>
       </section>
 
-      <!-- Order food handoff -->
+      <!-- Order food handoff — deliberately louder than the info cards -->
       <section class="card link-card" id="menuCard">
         <a id="menuLink" href="#">
-          <span class="card-ico">&#127859;</span>
-          <span><strong>Hungry?</strong><br><span class="muted">Order food to your room from the Tanawin Menu</span></span>
+          <span class="card-ico menu-ico">&#127859;</span>
+          <span><strong id="menuTitle">Hungry?</strong><br><span class="menu-sub" id="menuSub">Order food to your room from the Tanawin Menu</span></span>
           <span class="arrow">&#8594;</span>
         </a>
       </section>
