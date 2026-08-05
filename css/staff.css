@@ -130,6 +130,8 @@
 }
 
 .map-preview { max-width: 260px; border-radius: 10px; display: block; margin: 0.4rem 0; }
+.map-edit-holder { position: relative; display: inline-block; }
+.map-edit-holder .map-marker-label { font-size: 0.5rem; }
 
 .toast {
   position: fixed;

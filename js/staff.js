@@ -277,17 +277,62 @@ function buildEditor() {
       '+ Add direction');
 
     // Swappable map image — uploads to the concierge-assets bucket, so a new
-    // map needs no rebuild.
+    // map needs no rebuild. The Tanawin circle is an overlay stored as
+    // percentages: tap the picture to move it, so a new map just needs a
+    // fresh tap, never image editing.
+    let marker = v.marker ? { ...v.marker } : null;
     const mapWrap = document.createElement('div');
     mapWrap.className = 'ed-field';
     const mapLabel = document.createElement('label');
     mapLabel.textContent = 'Map image (optional — replaces the old one)';
     mapWrap.appendChild(mapLabel);
     if (v.image_url) {
+      const holder = document.createElement('div');
+      holder.className = 'map-edit-holder';
       const img = document.createElement('img');
       img.className = 'map-preview';
       img.src = v.image_url;
-      mapWrap.appendChild(img);
+      const ring = document.createElement('div');
+      ring.className = 'map-marker hidden';
+      const ringLabel = document.createElement('span');
+      ringLabel.className = 'map-marker-label';
+      ringLabel.textContent = 'Tanawin';
+      ring.appendChild(ringLabel);
+      holder.appendChild(img);
+      holder.appendChild(ring);
+      mapWrap.appendChild(holder);
+      const drawRing = () => {
+        if (marker && marker.x != null) {
+          ring.style.left = marker.x + '%';
+          ring.style.top = marker.y + '%';
+          ring.style.width = (2 * (marker.rx || 6.5)) + '%';
+          ring.style.height = (2 * (marker.ry || marker.rx || 6.5)) + '%';
+          ring.classList.remove('hidden');
+        } else {
+          ring.classList.add('hidden');
+        }
+      };
+      drawRing();
+      img.style.cursor = 'crosshair';
+      img.onclick = e => {
+        const r = img.getBoundingClientRect();
+        marker = {
+          x: +(((e.clientX - r.left) / r.width) * 100).toFixed(1),
+          y: +(((e.clientY - r.top) / r.height) * 100).toFixed(1),
+          rx: (marker && marker.rx) || 6.6,
+          ry: (marker && marker.ry) || 4.5,
+        };
+        drawRing();
+      };
+      const hint = document.createElement('p');
+      hint.className = 'ed-reviewed';
+      hint.textContent = 'Tap the picture to move the "Tanawin — you are here" circle (do this again after changing the map). Save to apply.';
+      mapWrap.appendChild(hint);
+      const clearBtn = document.createElement('button');
+      clearBtn.className = 'review-btn';
+      clearBtn.textContent = 'Remove circle';
+      clearBtn.onclick = () => { marker = null; drawRing(); };
+      mapWrap.appendChild(clearBtn);
     }
     const file = document.createElement('input');
     file.type = 'file';
@@ -306,7 +351,7 @@ function buildEditor() {
         if (error) return toast(`Map upload failed: ${error.message}`, true);
         imageUrl = `${ASSETS_BASE}/${path}?v=${Date.now()}`;
       }
-      const ok = await save(key, { intro: intro.value.trim(), directions: getRows(), image_url: imageUrl });
+      const ok = await save(key, { intro: intro.value.trim(), directions: getRows(), image_url: imageUrl, marker });
       if (ok && file.files && file.files[0]) buildEditor();
     });
     root.appendChild(div);

@@ -226,13 +226,28 @@ function renderMap(v) {
     row.appendChild(walk);
     list.appendChild(row);
   });
-  const img = $('mapImage');
+  const wrap = $('mapWrap');
   if (v.image_url) {
-    img.src = v.image_url;
-    img.classList.remove('hidden');
+    $('mapImage').src = v.image_url;
+    wrap.classList.remove('hidden');
+    positionMapMarker($('mapMarker'), v.marker);
   } else {
-    img.classList.add('hidden');
+    wrap.classList.add('hidden');
   }
+}
+
+// marker = {x, y, rx, ry} — all percentages of the image box, so the ellipse
+// scales with the responsive image.
+function positionMapMarker(el, marker) {
+  if (!marker || marker.x == null) {
+    el.classList.add('hidden');
+    return;
+  }
+  el.style.left = marker.x + '%';
+  el.style.top = marker.y + '%';
+  el.style.width = (2 * (marker.rx || 6.5)) + '%';
+  el.style.height = (2 * (marker.ry || marker.rx || 6.5)) + '%';
+  el.classList.remove('hidden');
 }
 
 function renderKeyInfo(v) {
