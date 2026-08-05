@@ -6,7 +6,10 @@
   opacity: 0.85;
   margin-left: 0.4rem;
 }
-.topbar-right { display: flex; gap: 0.5rem; align-items: center; }
+/* The editor topbar carries three chips — let it wrap cleanly on phones
+   instead of pushing the page wider than the screen. */
+#app .topbar { flex-wrap: wrap; }
+.topbar-right { display: flex; gap: 0.5rem; align-items: center; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 .hub-btn {
   background: rgba(255, 255, 255, 0.14);
   color: var(--cream-on-maroon);
@@ -83,8 +86,10 @@
 .ed-field textarea { min-height: 5.5rem; resize: vertical; }
 .ed-field input:focus, .ed-field textarea:focus { outline: none; border-color: var(--maroon-soft); }
 
-.ed-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-start; }
-.ed-row input { flex: 1; }
+/* Rows must be able to wrap: flex inputs refuse to shrink below their
+   content width (min-width:auto), which forced sideways scroll on phones. */
+.ed-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; align-items: flex-start; }
+.ed-row input { flex: 1 1 8.5rem; min-width: 0; }
 .row-del {
   border: none;
   background: var(--sand);
