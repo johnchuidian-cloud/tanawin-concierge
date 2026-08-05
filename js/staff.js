@@ -102,9 +102,18 @@ async function showApp() {
 function val(key) { return (content[key] && content[key].value) || {}; }
 
 async function save(key, value, opts = {}) {
+  // Merge over the freshest copy of the row before writing. A save must never
+  // erase fields this editor build doesn't know about — on 2026-08-05 a
+  // stale-bundle editor saved getting_around without the (newer) marker field
+  // and silently wiped the map circle. Explicit nulls still win (that's how
+  // "Remove circle" deletes), only unknown fields are preserved.
+  let base = val(key);
+  const { data: fresh } = await db.from('concierge_content')
+    .select('value').eq('key', key);
+  if (fresh && fresh[0] && fresh[0].value) base = fresh[0].value;
   const payload = {
     key,
-    value,
+    value: { ...base, ...value },
     updated_at: new Date().toISOString(),
     updated_by: me ? me.slug : 'admin',
   };
