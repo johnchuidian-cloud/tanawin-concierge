@@ -155,7 +155,9 @@ main {
   border-radius: 8px;
   padding: 0.2rem 0.55rem;
   font-size: 0.95rem;
-  word-break: break-all;
+  white-space: nowrap;   /* the password always stays on one line */
+  max-width: 100%;
+  overflow-x: auto;
 }
 .copy-btn {
   border: 1px solid var(--line);
@@ -175,6 +177,12 @@ main {
   font-size: 0.62rem;
   color: var(--ink-muted);
   margin-top: 0.15rem;
+}
+/* Narrow phones: the side-by-side QR squeezes the password onto two lines —
+   stack it centered underneath instead so the password keeps the full width. */
+@media (max-width: 479px) {
+  .wifi-net { flex-direction: column; align-items: stretch; }
+  .wifi-qr { align-self: center; }
 }
 
 /* pools */
