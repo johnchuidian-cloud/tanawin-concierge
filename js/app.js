@@ -96,10 +96,48 @@ function block(content, key) {
   return b ? { v: b.value || {}, reviewed: b.last_reviewed || null } : { v: {}, reviewed: null };
 }
 
+// Inline formatting in Lexi's text — the same markers Telegram uses:
+// **bold**, __italic__, ++underline++. Parsed into real elements (never
+// innerHTML), so content can't inject markup.
+function fmt(text) {
+  const frag = document.createDocumentFragment();
+  String(text || '')
+    .split(/(\*\*[^*]+\*\*|__[^_]+__|\+\+[^+]+\+\+)/g)
+    .forEach(tok => {
+      let el = null;
+      if (/^\*\*[^*]+\*\*$/.test(tok)) el = document.createElement('strong');
+      else if (/^__[^_]+__$/.test(tok)) el = document.createElement('em');
+      else if (/^\+\+[^+]+\+\+$/.test(tok)) el = document.createElement('u');
+      if (el) {
+        el.textContent = tok.slice(2, -2);
+        frag.appendChild(el);
+      } else if (tok) {
+        frag.appendChild(document.createTextNode(tok));
+      }
+    });
+  return frag;
+}
+
+function setFmt(el, text) {
+  el.textContent = '';
+  el.appendChild(fmt(text));
+}
+
+// Lexi's appearance settings (the `display` content block): text scale and
+// a background limited to the brand tones.
+const TEXT_SCALES = { normal: '100%', large: '112%', xlarge: '125%' };
+const BACKGROUNDS = { cream: '#FBFAF6', sand: '#F4F1E7', deep: '#E8E2D0', white: '#FFFFFF' };
+
+function applyDisplay(v) {
+  document.documentElement.style.fontSize = TEXT_SCALES[v.text_scale] || '100%';
+  document.body.style.background = BACKGROUNDS[v.background] || '';
+}
+
 function render(data) {
   $('roomChip').textContent = data.room.name;
   const c = data.content || {};
 
+  applyDisplay(block(c, 'display').v);
   renderWifi(block(c, 'wifi').v);
   renderPools(block(c, 'pool_hours'));
   renderMap(block(c, 'getting_around').v);
@@ -179,7 +217,7 @@ function wifiQr(net) {
 
 function renderPools(b) {
   const v = b.v;
-  $('poolIntro').textContent = v.intro || '';
+  setFmt($('poolIntro'), v.intro || '');
   const list = $('poolList');
   list.innerHTML = '';
   (v.pools || []).forEach(p => {
@@ -201,7 +239,7 @@ function renderPools(b) {
     row.appendChild(hours);
     list.appendChild(row);
   });
-  $('poolTip').textContent = v.tip || '';
+  setFmt($('poolTip'), v.tip || '');
   $('poolTip').classList.toggle('hidden', !v.tip);
   // Third-party content: show the quiet staleness note (handoff §10).
   $('poolAsOf').textContent = b.reviewed
@@ -210,7 +248,7 @@ function renderPools(b) {
 }
 
 function renderMap(v) {
-  $('mapIntro').textContent = v.intro || '';
+  setFmt($('mapIntro'), v.intro || '');
   const list = $('mapDirections');
   list.innerHTML = '';
   (v.directions || []).forEach(d => {
@@ -221,7 +259,7 @@ function renderMap(v) {
     place.textContent = d.place;
     const walk = document.createElement('div');
     walk.className = 'dir-walk';
-    walk.textContent = d.walk || '';
+    setFmt(walk, d.walk || '');
     row.appendChild(place);
     row.appendChild(walk);
     list.appendChild(row);
@@ -261,7 +299,7 @@ function renderKeyInfo(v) {
     label.textContent = item.label;
     const value = document.createElement('div');
     value.className = 'key-value';
-    value.textContent = item.value;
+    setFmt(value, item.value);
     row.appendChild(label);
     row.appendChild(value);
     list.appendChild(row);
@@ -303,7 +341,7 @@ function renderRules(v) {
     const ul = document.createElement('ul');
     (sec.items || []).forEach(item => {
       const li = document.createElement('li');
-      li.textContent = item;
+      setFmt(li, item);
       ul.appendChild(li);
     });
     div.appendChild(ul);

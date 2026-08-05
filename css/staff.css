@@ -111,6 +111,35 @@
   margin-bottom: 0.6rem;
 }
 
+.choice-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.choice-btn {
+  border: 1px solid var(--line);
+  background: var(--cream);
+  color: var(--ink-soft);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.choice-btn.selected {
+  background: var(--maroon);
+  border-color: var(--maroon);
+  color: var(--cream-on-maroon);
+}
+.swatch {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+.swatch.selected {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 3px rgba(154, 53, 24, 0.25);
+}
+
 .ed-actions { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
 .save-btn {
   background: var(--maroon);

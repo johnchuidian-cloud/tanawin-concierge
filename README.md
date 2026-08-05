@@ -19,6 +19,12 @@ getting-around directions + swappable map, key facts (staff hours, last call,
 breakfast, checkout), front-desk contact buttons, house rules, and a hand-off
 link to the Menu app that carries the room code so guests never retype it.
 
+**Appearance & formatting:** the editor's "Appearance" block (the `display`
+content row) sets guest-view text size (normal/large/xlarge) and background
+(brand tones only — no free color picker, deliberately). Any text field
+accepts Telegram-style inline markers, rendered safely (no innerHTML):
+`**bold**`, `__italic__`, `++underline++`.
+
 **Admin preview:** the editor's "👁 Guest view" button opens `/?preview=1` in a
 new tab — it reuses the editor's login session to render the guest view exactly
 as guests see it (plus a bottom banner with a back link), no room code needed.
