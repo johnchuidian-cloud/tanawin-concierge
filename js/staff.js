@@ -493,6 +493,33 @@ function buildEditor() {
     root.appendChild(div);
   }
 
+  // Request hours (Phase 2) — drives the out-of-hours message and flag.
+  {
+    const key = 'request_config';
+    const div = blockShell('Request hours', key,
+      'When requests count as "after hours" — guests can still send them, but they see "staff are back at 7am". Use 24-hour times like 18:00.');
+    const v = val(key);
+    const open = textInput(v.open, 'e.g. 07:00');
+    const lcWeek = textInput(v.last_call_weekday, 'e.g. 18:00');
+    const lcWeekend = textInput(v.last_call_weekend, 'e.g. 20:00');
+    div.appendChild(field('Staff start (every day)', open));
+    div.appendChild(field('Last call — weekdays', lcWeek));
+    div.appendChild(field('Last call — weekends', lcWeekend));
+    actions(div, key, () => {
+      const vals = [open.value.trim(), lcWeek.value.trim(), lcWeekend.value.trim()];
+      if (vals.some(t => !/^([01]?\d|2[0-3]):[0-5]\d$/.test(t))) {
+        toast('Times must look like 07:00 or 18:00 (24-hour)', true);
+        return;
+      }
+      return save(key, {
+        open: vals[0],
+        last_call_weekday: vals[1],
+        last_call_weekend: vals[2],
+      });
+    });
+    root.appendChild(div);
+  }
+
   // Contact
   {
     const key = 'contact';

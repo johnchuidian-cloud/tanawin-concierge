@@ -251,6 +251,32 @@ function renderMyRequests() {
     st.textContent = STATUS_LABEL[r.status] || STATUS_LABEL.new;
     row.appendChild(kind);
     row.appendChild(st);
+    // A still-new request can be taken back before staff pick it up.
+    if (!r.status || r.status === 'new') {
+      const cancel = document.createElement('button');
+      cancel.className = 'myreq-cancel';
+      cancel.textContent = 'Cancel';
+      cancel.onclick = async () => {
+        cancel.disabled = true;
+        try {
+          const { data } = await db.rpc('concierge_cancel_request', { p_id: r.id });
+          if (data && data.ok) {
+            const list = myRequests();
+            const mine = list.find(x => x.id === r.id);
+            if (mine) mine.status = 'cancelled';
+            saveMyRequests(list);
+            renderMyRequests();
+          } else {
+            // staff already picked it up — show the fresh status instead
+            refreshMyRequests();
+            cancel.remove();
+          }
+        } catch {
+          cancel.disabled = false;
+        }
+      };
+      row.appendChild(cancel);
+    }
     wrap.appendChild(row);
   });
 }
@@ -402,7 +428,9 @@ function openReqSheet(kind) {
   $('reqSheet').classList.remove('hidden');
 }
 
-// Downscale to ≤1100px JPEG; retry at lower quality if over the RPC's cap.
+// Downscale to ≤1100px. PNG sources stay PNG when the result fits the cap
+// (lossless — crisp for screenshots); otherwise fall back to JPEG, retrying
+// at lower quality. Camera photos are JPEG anyway.
 function compressPhoto(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -412,7 +440,12 @@ function compressPhoto(file) {
       canvas.width = Math.round(img.width * scale);
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      let out = canvas.toDataURL('image/jpeg', 0.7);
+      let out = null;
+      if (file.type === 'image/png') {
+        const png = canvas.toDataURL('image/png');
+        if (png.length <= 380000) out = png;
+      }
+      if (!out) out = canvas.toDataURL('image/jpeg', 0.7);
       if (out.length > 380000) out = canvas.toDataURL('image/jpeg', 0.45);
       URL.revokeObjectURL(img.src);
       out.length > 380000 ? reject(new Error('too big')) : resolve(out);

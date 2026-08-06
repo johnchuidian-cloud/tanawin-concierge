@@ -395,6 +395,16 @@ main .card { scroll-margin-top: 4.2rem; }
 .myreq-status.st-acknowledged { color: var(--maroon-soft); }
 .myreq-status.st-done { color: #2E7D32; }
 .myreq-status.st-cancelled { color: var(--ink-muted); text-decoration: line-through; }
+.myreq-cancel {
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--ink-muted);
+  border-radius: 8px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+}
 
 .req-backdrop {
   position: fixed;
