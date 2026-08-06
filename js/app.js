@@ -246,6 +246,14 @@ function renderMyRequests() {
     kind.className = 'myreq-kind';
     const t = new Date(r.created);
     kind.textContent = `${KIND_LABEL[r.kind] || r.kind} · ${t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    // What exactly was asked for — two "Room items" requests must be
+    // tellable apart (Lexi's test feedback).
+    if (r.summary) {
+      const detail = document.createElement('span');
+      detail.className = 'myreq-detail';
+      detail.textContent = r.summary;
+      kind.appendChild(detail);
+    }
     const st = document.createElement('span');
     st.className = `myreq-status st-${r.status || 'new'}`;
     st.textContent = STATUS_LABEL[r.status] || STATUS_LABEL.new;
@@ -502,8 +510,17 @@ $('reqSend').onclick = async () => {
         : 'Could not send — please try again';
       return;
     }
+    let summary = '';
+    if (kind === 'room_items' && items) {
+      summary = items
+        .map(it => it.label + (it.note ? ` (${it.note})` : '') + (it.qty > 1 ? ` ×${it.qty}` : ''))
+        .join(', ');
+    } else if (kind === 'problem') {
+      summary = (reqState.notes.__main || '').trim();
+    }
+    if (summary.length > 70) summary = summary.slice(0, 67) + '…';
     const list = myRequests();
-    list.push({ id: data.id, kind, status: 'new', created: new Date().toISOString() });
+    list.push({ id: data.id, kind, status: 'new', created: new Date().toISOString(), summary: summary || undefined });
     saveMyRequests(list);
     renderMyRequests();
     const body = $('reqBody');
