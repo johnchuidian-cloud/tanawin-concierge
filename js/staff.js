@@ -467,6 +467,32 @@ function buildEditor() {
     root.appendChild(div);
   }
 
+  // Request items (Phase 2) — what guests can pick on the Room Items screen.
+  {
+    const key = 'request_items';
+    const div = blockShell('Request items (guest requests)', key,
+      'What guests can ask for on the Room Items screen. Fill the second box only if they must specify something — e.g. "Which appliance?" — and a text box appears for them.');
+    const v = val(key);
+    const getRows = rowsEditor(div, (v.items || []).map(it => ({ label: it.label, note_prompt: it.note_prompt || '' })),
+      [{ key: 'label', placeholder: 'Item' },
+       { key: 'note_prompt', placeholder: 'If they must specify: ask what? (optional)' }],
+      '+ Add item');
+    actions(div, key, () => save(key, {
+      items: getRows().map(r => {
+        const label = (r.label || '').trim();
+        const prompt = (r.note_prompt || '').trim();
+        // stable-ish id from the label; existing ids preserved when unchanged
+        const existing = (v.items || []).find(it => it.label === label);
+        return {
+          id: existing ? existing.id : label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+          label,
+          ...(prompt ? { needs_note: true, note_prompt: prompt } : {}),
+        };
+      }).filter(it => it.label),
+    }));
+    root.appendChild(div);
+  }
+
   // Contact
   {
     const key = 'contact';

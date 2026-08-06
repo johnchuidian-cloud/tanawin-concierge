@@ -154,6 +154,7 @@ function render(data) {
     ? `${MENU_URL}/?code=${encodeURIComponent(roomCode)}&from=concierge`
     : `${MENU_URL}/?from=concierge`;
 
+  initRequests(c);
   applyOrder(block(c, 'layout').v);
 }
 
@@ -162,15 +163,17 @@ function render(data) {
 const CARD_FOR = {
   wifi: 'wifiCard',
   house_rules: 'rulesCard',
+  requests: 'requestCard',
   pool_hours: 'poolCard',
   getting_around: 'mapCard',
   key_info: 'keyCard',
   menu_card: 'menuCard',
   contact: 'contactCard',
 };
-// Default: wifi first (the most-asked question), house rules second.
-const DEFAULT_ORDER = ['wifi', 'house_rules', 'pool_hours', 'getting_around',
-  'key_info', 'menu_card', 'contact'];
+// Default: wifi first (the most-asked question), house rules second,
+// requests third (the third most-asked: room/kitchen items).
+const DEFAULT_ORDER = ['wifi', 'house_rules', 'requests', 'pool_hours',
+  'getting_around', 'key_info', 'menu_card', 'contact'];
 
 function applyOrder(v) {
   const order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)
@@ -191,6 +194,307 @@ function applyOrder(v) {
     if (btn) rail.appendChild(btn);
   });
 }
+
+// ---------- requests (Phase 2) ----------
+//
+// Guests submit through concierge_submit_request (code-validated server-side,
+// dining codes rejected, 10/room/hour). Sent request ids live in localStorage
+// as claim tickets; statuses come from the concierge_request_status peephole.
+
+const REQ_KEY = 'concierge_my_requests';
+const KIND_LABEL = {
+  towel_change: 'Bath towel change',
+  bin_clearing: 'Bin clearing',
+  room_items: 'Room items',
+  problem: 'Problem report',
+};
+const STATUS_LABEL = {
+  new: 'Sent — waiting for staff',
+  acknowledged: 'Acknowledged — on it!',
+  done: 'Done',
+  cancelled: 'Cancelled',
+};
+let reqItems = [];    // Lexi's request_items list (via bootstrap)
+let reqConfig = {};   // request_config: open / last-call times
+let reqState = null;  // open sheet state: {kind, qty:{}, notes:{}, photo}
+
+function initRequests(content) {
+  reqItems = (block(content, 'request_items').v.items || []);
+  reqConfig = block(content, 'request_config').v || {};
+  renderMyRequests();
+  refreshMyRequests();
+}
+
+function myRequests() {
+  try { return JSON.parse(localStorage.getItem(REQ_KEY) || '[]'); } catch { return []; }
+}
+
+function saveMyRequests(list) {
+  // keep the newest 8, drop anything older than 48h
+  const cutoff = Date.now() - 48 * 3600 * 1000;
+  localStorage.setItem(REQ_KEY, JSON.stringify(
+    list.filter(r => new Date(r.created).getTime() > cutoff).slice(-8)));
+}
+
+function renderMyRequests() {
+  const wrap = $('myRequests');
+  wrap.innerHTML = '';
+  myRequests().slice().reverse().forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'myreq-row';
+    const kind = document.createElement('span');
+    kind.className = 'myreq-kind';
+    const t = new Date(r.created);
+    kind.textContent = `${KIND_LABEL[r.kind] || r.kind} · ${t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+    const st = document.createElement('span');
+    st.className = `myreq-status st-${r.status || 'new'}`;
+    st.textContent = STATUS_LABEL[r.status] || STATUS_LABEL.new;
+    row.appendChild(kind);
+    row.appendChild(st);
+    wrap.appendChild(row);
+  });
+}
+
+async function refreshMyRequests() {
+  const list = myRequests();
+  if (!list.length) return;
+  let changed = false;
+  for (const r of list) {
+    if (r.status === 'done' || r.status === 'cancelled') continue;
+    try {
+      const { data } = await db.rpc('concierge_request_status', { p_id: r.id });
+      if (data && data.ok && data.status !== r.status) {
+        r.status = data.status;
+        changed = true;
+      }
+    } catch { /* offline — try again next load */ }
+  }
+  if (changed) {
+    saveMyRequests(list);
+    renderMyRequests();
+  }
+}
+
+// Out-of-hours check mirrors the server's (which has the final say) so the
+// guest is warned BEFORE sending, not only after.
+function isOutOfHours() {
+  const now = new Date();
+  const hm = now.getHours() * 60 + now.getMinutes();
+  const parse = (s, fallback) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(s || '');
+    return m ? (+m[1]) * 60 + (+m[2]) : fallback;
+  };
+  const weekend = now.getDay() === 0 || now.getDay() === 6;
+  const lastCall = weekend
+    ? parse(reqConfig.last_call_weekend, 20 * 60)
+    : parse(reqConfig.last_call_weekday, 18 * 60);
+  const open = parse(reqConfig.open, 7 * 60);
+  return hm >= lastCall || hm < open;
+}
+
+const OOH_TEXT = 'Staff are done for the day — your request is saved and they\'ll handle it when they\'re back at 7am.';
+
+document.querySelectorAll('.req-btn').forEach(btn => {
+  btn.onclick = () => openReqSheet(btn.dataset.kind);
+});
+$('reqCancel').onclick = closeReqSheet;
+$('reqBackdrop').onclick = closeReqSheet;
+
+function closeReqSheet() {
+  reqState = null;
+  $('reqSheet').classList.add('hidden');
+  $('reqBackdrop').classList.add('hidden');
+}
+
+function openReqSheet(kind) {
+  reqState = { kind, qty: {}, notes: {}, photo: null };
+  $('reqTitle').textContent = KIND_LABEL[kind];
+  $('reqOoh').textContent = OOH_TEXT;
+  $('reqOoh').classList.toggle('hidden', !isOutOfHours());
+  $('reqActions').classList.remove('hidden');
+  $('reqSend').disabled = false;
+  $('reqSend').textContent = 'Send request';
+  const body = $('reqBody');
+  body.innerHTML = '';
+
+  if (kind === 'towel_change' || kind === 'bin_clearing') {
+    const p = document.createElement('p');
+    p.className = 'req-confirm-text';
+    p.textContent = kind === 'towel_change'
+      ? 'We\'ll bring fresh bath towels and take the used ones.'
+      : 'We\'ll come and clear your bins.';
+    body.appendChild(p);
+  }
+
+  if (kind === 'room_items') {
+    reqItems.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'req-item-row';
+      const label = document.createElement('div');
+      label.className = 'req-item-label';
+      label.textContent = item.label;
+      const stepper = document.createElement('div');
+      stepper.className = 'req-stepper';
+      const minus = document.createElement('button');
+      minus.className = 'req-step-btn';
+      minus.textContent = '−';
+      const qty = document.createElement('span');
+      qty.className = 'req-qty';
+      const plus = document.createElement('button');
+      plus.className = 'req-step-btn';
+      plus.textContent = '+';
+      const noteInput = document.createElement('input');
+      noteInput.className = 'req-item-note hidden';
+      noteInput.placeholder = item.note_prompt || 'Please specify';
+      noteInput.oninput = () => { reqState.notes[item.id] = noteInput.value; };
+      const draw = () => {
+        const n = reqState.qty[item.id] || 0;
+        qty.textContent = n;
+        minus.disabled = n === 0;
+        noteInput.classList.toggle('hidden', !(item.needs_note && n > 0));
+      };
+      minus.onclick = () => { reqState.qty[item.id] = Math.max(0, (reqState.qty[item.id] || 0) - 1); draw(); };
+      plus.onclick = () => { reqState.qty[item.id] = Math.min(10, (reqState.qty[item.id] || 0) + 1); draw(); };
+      draw();
+      stepper.appendChild(minus);
+      stepper.appendChild(qty);
+      stepper.appendChild(plus);
+      row.appendChild(label);
+      row.appendChild(stepper);
+      body.appendChild(row);
+      body.appendChild(noteInput);
+    });
+  }
+
+  if (kind === 'problem') {
+    const note = document.createElement('textarea');
+    note.className = 'req-note';
+    note.placeholder = 'What\'s the problem? e.g. "The aircon in our room is dripping."';
+    note.oninput = () => { reqState.notes.__main = note.value; };
+    body.appendChild(note);
+    const file = document.createElement('input');
+    file.type = 'file';
+    file.accept = 'image/*';
+    file.style.marginTop = '0.6rem';
+    const preview = document.createElement('img');
+    preview.className = 'req-photo-preview hidden';
+    file.onchange = () => {
+      if (!file.files || !file.files[0]) return;
+      compressPhoto(file.files[0]).then(dataUrl => {
+        reqState.photo = dataUrl;
+        preview.src = dataUrl;
+        preview.classList.remove('hidden');
+      }).catch(() => { reqState.photo = null; });
+    };
+    body.appendChild(file);
+    body.appendChild(preview);
+  }
+
+  if (kind === 'room_items') {
+    const note = document.createElement('textarea');
+    note.className = 'req-note';
+    note.placeholder = 'Anything else we should know? (optional)';
+    note.oninput = () => { reqState.notes.__main = note.value; };
+    body.appendChild(note);
+  }
+
+  $('reqBackdrop').classList.remove('hidden');
+  $('reqSheet').classList.remove('hidden');
+}
+
+// Downscale to ≤1100px JPEG; retry at lower quality if over the RPC's cap.
+function compressPhoto(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 1100 / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      let out = canvas.toDataURL('image/jpeg', 0.7);
+      if (out.length > 380000) out = canvas.toDataURL('image/jpeg', 0.45);
+      URL.revokeObjectURL(img.src);
+      out.length > 380000 ? reject(new Error('too big')) : resolve(out);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+$('reqSend').onclick = async () => {
+  if (!reqState) return;
+  if (!roomCode) {  // admin preview has no room code
+    $('reqSend').textContent = 'Not available in preview';
+    return;
+  }
+  const { kind } = reqState;
+  let items = null;
+  if (kind === 'room_items') {
+    items = reqItems
+      .filter(it => (reqState.qty[it.id] || 0) > 0)
+      .map(it => ({
+        id: it.id,
+        label: it.label,
+        qty: reqState.qty[it.id],
+        note: (reqState.notes[it.id] || '').trim() || undefined,
+      }));
+    if (!items.length) {
+      $('reqSend').textContent = 'Pick at least one item';
+      setTimeout(() => { $('reqSend').textContent = 'Send request'; }, 1600);
+      return;
+    }
+  }
+  if (kind === 'problem' && !(reqState.notes.__main || '').trim()) {
+    $('reqSend').textContent = 'Please describe the problem';
+    setTimeout(() => { $('reqSend').textContent = 'Send request'; }, 1600);
+    return;
+  }
+
+  $('reqSend').disabled = true;
+  $('reqSend').textContent = 'Sending…';
+  try {
+    const { data, error } = await db.rpc('concierge_submit_request', {
+      p_access_code: roomCode,
+      p_kind: kind,
+      p_items: items,
+      p_note: (reqState.notes.__main || '').trim() || null,
+      p_photo: reqState.photo,
+    });
+    if (error || !data) throw new Error('network');
+    if (!data.ok) {
+      $('reqSend').disabled = false;
+      $('reqSend').textContent = data.reason === 'rate_limited'
+        ? 'Too many requests this hour — please ask the front desk'
+        : 'Could not send — please try again';
+      return;
+    }
+    const list = myRequests();
+    list.push({ id: data.id, kind, status: 'new', created: new Date().toISOString() });
+    saveMyRequests(list);
+    renderMyRequests();
+    const body = $('reqBody');
+    body.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.className = 'req-done-msg';
+    const big = document.createElement('div');
+    big.className = 'big';
+    big.textContent = '✓';
+    const text = document.createElement('p');
+    text.textContent = data.out_of_hours
+      ? OOH_TEXT
+      : 'Request sent! Staff have been notified.';
+    msg.appendChild(big);
+    msg.appendChild(text);
+    body.appendChild(msg);
+    $('reqOoh').classList.add('hidden');
+    $('reqActions').classList.add('hidden');
+    setTimeout(closeReqSheet, 2600);
+  } catch {
+    $('reqSend').disabled = false;
+    $('reqSend').textContent = 'No connection — please try again';
+  }
+};
 
 function renderWifi(v) {
   const nets = (v.networks || []).filter(n => n && n.name);

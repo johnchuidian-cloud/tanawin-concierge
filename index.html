@@ -43,6 +43,7 @@
     <!-- Side tabs: jump between sections without scrolling hunt -->
     <nav id="rail" class="rail" aria-label="Jump to section">
       <button data-target="wifiCard" title="Wifi" aria-label="Wifi">&#128246;</button>
+      <button data-target="requestCard" title="Request something" aria-label="Request something">&#128718;</button>
       <button data-target="poolCard" title="Pool hours" aria-label="Pool hours">&#127946;</button>
       <button data-target="mapCard" title="Getting around" aria-label="Getting around">&#129517;</button>
       <button data-target="keyCard" title="Good to know" aria-label="Good to know">&#128337;</button>
@@ -58,6 +59,19 @@
         <h2><span class="card-ico">&#128246;</span> Wifi</h2>
         <div id="wifiNets"></div>
         <p id="wifiEmpty" class="muted hidden">Wifi details coming soon.</p>
+      </section>
+
+      <!-- Requests (Phase 2) -->
+      <section class="card" id="requestCard">
+        <h2><span class="card-ico">&#128718;</span> Request something</h2>
+        <p class="muted">Free for room guests — we'll bring it to your room.</p>
+        <div class="req-buttons">
+          <button class="req-btn" data-kind="towel_change"><span>&#129532;</span> Bath towel change</button>
+          <button class="req-btn" data-kind="bin_clearing"><span>&#128465;</span> Bin clearing</button>
+          <button class="req-btn" data-kind="room_items"><span>&#129524;</span> Room items</button>
+          <button class="req-btn" data-kind="problem"><span>&#128736;</span> Report a problem</button>
+        </div>
+        <div id="myRequests"></div>
       </section>
 
       <!-- Pool hours -->
@@ -113,6 +127,18 @@
         <p><button id="switchRoom" class="linklike">Use a different room code</button></p>
       </footer>
     </main>
+  </div>
+
+  <!-- Request sheet -->
+  <div id="reqBackdrop" class="req-backdrop hidden"></div>
+  <div id="reqSheet" class="req-sheet hidden">
+    <h3 id="reqTitle"></h3>
+    <p id="reqOoh" class="req-ooh hidden"></p>
+    <div id="reqBody"></div>
+    <div class="req-actions" id="reqActions">
+      <button id="reqCancel" class="req-cancel">Cancel</button>
+      <button id="reqSend" class="req-send">Send request</button>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
