@@ -7,7 +7,21 @@ information first, requests second, with food ordering handed off to the Menu ap
 Part of the Tanawin family: **Finance**, **Kitchen**, **Hub**, **Menu**,
 **Payroll**, **Concierge** (this app).
 
-## Phase 1 — Tanawin Info (this build)
+## Phase 2 — Guest requests (live)
+
+Room guests (dining codes rejected) submit towel changes, bin clearing, room
+items (Lexi-editable list, tap-checklist + quantity steppers, specify-boxes
+for utensils/appliances/others) and problem reports with a compressed photo —
+all free, capped at 10/room/hour server-side. Requests land interleaved with
+food orders in **Menu's** `/staff` dashboard (suite connection #7 — Menu may
+update these rows; the queue, alerts and the 10-minute escalation push are
+Menu-side). Status model: new → acknowledged → done (+cancelled) — plain
+words, deliberately not the food lifecycle. Out-of-hours submissions queue
+with an explicit "staff are back at 7am" message (hours in the
+`request_config` content row). Guests track their tickets under "My requests"
+(localStorage uuids + the `concierge_request_status` peephole).
+
+## Phase 1 — Tanawin Info
 
 | Surface | File | Who | Auth |
 |---|---|---|---|
