@@ -243,6 +243,70 @@ function buildEditor() {
   const root = $('blocks');
   root.innerHTML = '';
 
+  // Section order — how the guest page's cards are arranged. Arrows always
+  // (reliable on phones); drag works on desktop as a bonus.
+  {
+    const key = 'layout';
+    const NAMES = {
+      wifi: 'Wifi',
+      house_rules: 'House rules',
+      pool_hours: 'Pool hours',
+      getting_around: 'Getting around Sinagtala',
+      key_info: 'Good to know',
+      menu_card: '"Hungry?" card',
+      contact: 'Contact the front desk',
+    };
+    const DEFAULT_ORDER = ['wifi', 'house_rules', 'pool_hours', 'getting_around',
+      'key_info', 'menu_card', 'contact'];
+    const div = blockShell('Section order', key,
+      'Guests see the sections in this order (the round side buttons follow too). Move one with the arrows, then Save.');
+    const v = val(key);
+    let order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)
+      .filter(k => NAMES[k]);
+    DEFAULT_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
+
+    const listEl = document.createElement('div');
+    div.appendChild(listEl);
+    let dragFrom = null;
+    function drawOrder() {
+      listEl.innerHTML = '';
+      order.forEach((k, i) => {
+        const row = document.createElement('div');
+        row.className = 'order-row';
+        row.draggable = true;
+        row.ondragstart = () => { dragFrom = i; };
+        row.ondragover = e => e.preventDefault();
+        row.ondrop = e => {
+          e.preventDefault();
+          if (dragFrom === null || dragFrom === i) return;
+          order.splice(i, 0, order.splice(dragFrom, 1)[0]);
+          dragFrom = null;
+          drawOrder();
+        };
+        const name = document.createElement('span');
+        name.className = 'order-name';
+        name.textContent = `${i + 1}. ${NAMES[k]}`;
+        row.appendChild(name);
+        const up = document.createElement('button');
+        up.className = 'order-btn';
+        up.textContent = '▲';
+        up.disabled = i === 0;
+        up.onclick = () => { order.splice(i - 1, 0, order.splice(i, 1)[0]); drawOrder(); };
+        const down = document.createElement('button');
+        down.className = 'order-btn';
+        down.textContent = '▼';
+        down.disabled = i === order.length - 1;
+        down.onclick = () => { order.splice(i + 1, 0, order.splice(i, 1)[0]); drawOrder(); };
+        row.appendChild(up);
+        row.appendChild(down);
+        listEl.appendChild(row);
+      });
+    }
+    drawOrder();
+    actions(div, key, () => save(key, { order }));
+    root.appendChild(div);
+  }
+
   // Wifi — up to two slots; only populated ones show to guests.
   {
     const key = 'wifi';

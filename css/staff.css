@@ -111,6 +111,30 @@
   margin-bottom: 0.6rem;
 }
 
+.order-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+  cursor: grab;
+}
+.order-name { flex: 1; font-size: 0.92rem; color: var(--ink-soft); }
+.order-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink-soft);
+  border-radius: 8px;
+  width: 2.2rem;
+  height: 2rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.order-btn:disabled { opacity: 0.35; cursor: default; }
+
 .ed-actions { display: flex; gap: 0.6rem; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; }
 .save-btn {
   background: var(--maroon);

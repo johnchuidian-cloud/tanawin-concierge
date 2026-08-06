@@ -147,11 +147,49 @@ function render(data) {
   if (mc.title) setFmt($('menuTitle'), mc.title);
   if (mc.subtitle) setFmt($('menuSub'), mc.subtitle);
 
-  // Hand the code to Menu so the guest never retypes it at checkout.
-  // (No code in admin preview — plain Menu link.)
+  // Hand the code to Menu so the guest never retypes it at checkout, and
+  // flag where they came from so Menu can show its "Back to Concierge" bar
+  // (Menu-side feature; QR-direct Menu guests never get the bar).
   $('menuLink').href = roomCode
-    ? `${MENU_URL}/?code=${encodeURIComponent(roomCode)}`
-    : MENU_URL;
+    ? `${MENU_URL}/?code=${encodeURIComponent(roomCode)}&from=concierge`
+    : `${MENU_URL}/?from=concierge`;
+
+  applyOrder(block(c, 'layout').v);
+}
+
+// ---------- section order (Lexi-editable via the `layout` block) ----------
+
+const CARD_FOR = {
+  wifi: 'wifiCard',
+  house_rules: 'rulesCard',
+  pool_hours: 'poolCard',
+  getting_around: 'mapCard',
+  key_info: 'keyCard',
+  menu_card: 'menuCard',
+  contact: 'contactCard',
+};
+// Default: wifi first (the most-asked question), house rules second.
+const DEFAULT_ORDER = ['wifi', 'house_rules', 'pool_hours', 'getting_around',
+  'key_info', 'menu_card', 'contact'];
+
+function applyOrder(v) {
+  const order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)
+    .filter(k => CARD_FOR[k]);
+  // Sections this build knows but the saved order doesn't (future cards)
+  // append at the end rather than disappearing.
+  DEFAULT_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
+  const main = $('content');
+  const footer = main.querySelector('.footer');
+  order.forEach(k => {
+    const card = $(CARD_FOR[k]);
+    if (card) main.insertBefore(card, footer);
+  });
+  // The side rail follows the same order.
+  const rail = $('rail');
+  order.forEach(k => {
+    const btn = rail.querySelector(`[data-target="${CARD_FOR[k]}"]`);
+    if (btn) rail.appendChild(btn);
+  });
 }
 
 function renderWifi(v) {
