@@ -93,8 +93,15 @@ $('switchRoom').onclick = () => {
 
 function block(content, key) {
   const b = content[key];
-  return b ? { v: b.value || {}, reviewed: b.last_reviewed || null } : { v: {}, reviewed: null };
+  const v = b && b.value && typeof b.value === 'object' && !Array.isArray(b.value) ? b.value : {};
+  return { v, reviewed: (b && b.last_reviewed) || null };
 }
+
+// Defensive coercion: one malformed content value (a bad SQL edit, a future
+// editor bug) must degrade to an empty card, never crash the whole render.
+const arr = x => (Array.isArray(x) ? x : []);
+const str = x => (typeof x === 'string' ? x : '');
+const obj = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
 
 // Inline formatting in Lexi's text — the same markers Telegram uses:
 // **bold**, __italic__, ++underline++. Parsed into real elements (never
@@ -219,7 +226,7 @@ let reqConfig = {};   // request_config: open / last-call times
 let reqState = null;  // open sheet state: {kind, qty:{}, notes:{}, photo}
 
 function initRequests(content) {
-  reqItems = (block(content, 'request_items').v.items || []);
+  reqItems = arr(block(content, 'request_items').v.items).filter(i => i && typeof i === 'object');
   reqConfig = block(content, 'request_config').v || {};
   renderMyRequests();
   refreshMyRequests();
@@ -378,7 +385,10 @@ function openReqSheet(kind) {
   }
 
   if (kind === 'room_items') {
-    reqItems.forEach(item => {
+    reqItems.forEach((item, idx) => {
+      // Keyed by list position, not id — two items that end up with the same
+      // id (duplicate labels in the editor) must never share a counter.
+      const k = `${idx}|${item.id}`;
       const row = document.createElement('div');
       row.className = 'req-item-row';
       const label = document.createElement('div');
@@ -397,15 +407,15 @@ function openReqSheet(kind) {
       const noteInput = document.createElement('input');
       noteInput.className = 'req-item-note hidden';
       noteInput.placeholder = item.note_prompt || 'Please specify';
-      noteInput.oninput = () => { reqState.notes[item.id] = noteInput.value; };
+      noteInput.oninput = () => { reqState.notes[k] = noteInput.value; };
       const draw = () => {
-        const n = reqState.qty[item.id] || 0;
+        const n = reqState.qty[k] || 0;
         qty.textContent = n;
         minus.disabled = n === 0;
         noteInput.classList.toggle('hidden', !(item.needs_note && n > 0));
       };
-      minus.onclick = () => { reqState.qty[item.id] = Math.max(0, (reqState.qty[item.id] || 0) - 1); draw(); };
-      plus.onclick = () => { reqState.qty[item.id] = Math.min(10, (reqState.qty[item.id] || 0) + 1); draw(); };
+      minus.onclick = () => { reqState.qty[k] = Math.max(0, (reqState.qty[k] || 0) - 1); draw(); };
+      plus.onclick = () => { reqState.qty[k] = Math.min(10, (reqState.qty[k] || 0) + 1); draw(); };
       draw();
       stepper.appendChild(minus);
       stepper.appendChild(qty);
@@ -490,12 +500,13 @@ $('reqSend').onclick = async () => {
   let items = null;
   if (kind === 'room_items') {
     items = reqItems
-      .filter(it => (reqState.qty[it.id] || 0) > 0)
-      .map(it => ({
+      .map((it, idx) => ({ it, k: `${idx}|${it.id}` }))
+      .filter(({ k }) => (reqState.qty[k] || 0) > 0)
+      .map(({ it, k }) => ({
         id: it.id,
         label: it.label,
-        qty: reqState.qty[it.id],
-        note: (reqState.notes[it.id] || '').trim() || undefined,
+        qty: reqState.qty[k],
+        note: (reqState.notes[k] || '').trim() || undefined,
       }));
     if (!items.length) {
       $('reqSend').textContent = 'Pick at least one item';
@@ -564,7 +575,7 @@ $('reqSend').onclick = async () => {
 };
 
 function renderWifi(v) {
-  const nets = (v.networks || []).filter(n => n && n.name);
+  const nets = arr(v.networks).filter(n => n && typeof n === 'object' && str(n.name));
   const wrap = $('wifiNets');
   wrap.innerHTML = '';
   $('wifiEmpty').classList.toggle('hidden', nets.length > 0);
@@ -631,7 +642,7 @@ function renderPools(b) {
   setFmt($('poolIntro'), v.intro || '');
   const list = $('poolList');
   list.innerHTML = '';
-  (v.pools || []).forEach(p => {
+  arr(v.pools).filter(p => p && typeof p === 'object').forEach(p => {
     const row = document.createElement('div');
     row.className = 'pool-row';
     const left = document.createElement('div');
@@ -662,7 +673,7 @@ function renderMap(v) {
   setFmt($('mapIntro'), v.intro || '');
   const list = $('mapDirections');
   list.innerHTML = '';
-  (v.directions || []).forEach(d => {
+  arr(v.directions).filter(d => d && typeof d === 'object').forEach(d => {
     const row = document.createElement('div');
     row.className = 'dir-row';
     const place = document.createElement('div');
@@ -676,7 +687,7 @@ function renderMap(v) {
     list.appendChild(row);
   });
   const wrap = $('mapWrap');
-  if (v.image_url) {
+  if (str(v.image_url)) {
     $('mapImage').src = v.image_url;
     wrap.classList.remove('hidden');
     positionMapMarker($('mapMarker'), v.marker);
@@ -688,21 +699,31 @@ function renderMap(v) {
 // marker = {x, y, rx, ry} — all percentages of the image box, so the ellipse
 // scales with the responsive image.
 function positionMapMarker(el, marker) {
-  if (!marker || marker.x == null) {
+  const m = obj(marker);
+  const num = (x, lo, hi, fb) => {
+    const n = Number(x);
+    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : fb;
+  };
+  const x = num(m.x, 0, 100, null);
+  const y = num(m.y, 0, 100, null);
+  if (x === null || y === null) {
     el.classList.add('hidden');
     return;
   }
-  el.style.left = marker.x + '%';
-  el.style.top = marker.y + '%';
-  el.style.width = (2 * (marker.rx || 6.5)) + '%';
-  el.style.height = (2 * (marker.ry || marker.rx || 6.5)) + '%';
+  // radii clamped so a corrupt value can't paint a giant blob over the map
+  const rx = num(m.rx, 1, 40, 6.5);
+  const ry = num(m.ry, 1, 40, rx);
+  el.style.left = x + '%';
+  el.style.top = y + '%';
+  el.style.width = (2 * rx) + '%';
+  el.style.height = (2 * ry) + '%';
   el.classList.remove('hidden');
 }
 
 function renderKeyInfo(v) {
   const list = $('keyList');
   list.innerHTML = '';
-  (v.items || []).forEach(item => {
+  arr(v.items).filter(i => i && typeof i === 'object').forEach(item => {
     const row = document.createElement('div');
     row.className = 'key-row';
     const label = document.createElement('div');
@@ -721,10 +742,11 @@ function renderContact(v) {
   const list = $('contactList');
   list.innerHTML = '';
   const entries = [];
-  if (v.globe) entries.push({ label: 'Call (Globe)', value: v.globe, href: `tel:${v.globe.replace(/\s/g, '')}` });
-  if (v.smart) entries.push({ label: 'Call (Smart)', value: v.smart, href: `tel:${v.smart.replace(/\s/g, '')}` });
-  if (v.messenger) entries.push({ label: 'Messenger', value: `m.me/${v.messenger}`, href: `https://m.me/${v.messenger}` });
-  if (v.viber) entries.push({ label: 'Viber', value: v.viber, href: `viber://chat?number=%2B${v.viber.replace(/\D/g, '')}` });
+  const globe = str(v.globe), smart = str(v.smart), messenger = str(v.messenger), viber = str(v.viber);
+  if (globe) entries.push({ label: 'Call (Globe)', value: globe, href: `tel:${globe.replace(/\s/g, '')}` });
+  if (smart) entries.push({ label: 'Call (Smart)', value: smart, href: `tel:${smart.replace(/\s/g, '')}` });
+  if (messenger) entries.push({ label: 'Messenger', value: `m.me/${messenger}`, href: `https://m.me/${encodeURIComponent(messenger)}` });
+  if (viber) entries.push({ label: 'Viber', value: viber, href: `viber://chat?number=%2B${viber.replace(/\D/g, '')}` });
   $('contactEmpty').classList.toggle('hidden', entries.length > 0);
   entries.forEach(e => {
     const a = document.createElement('a');
@@ -743,14 +765,14 @@ function renderContact(v) {
 function renderRules(v) {
   const list = $('rulesList');
   list.innerHTML = '';
-  (v.sections || []).forEach(sec => {
+  arr(v.sections).filter(sec => sec && typeof sec === 'object').forEach(sec => {
     const div = document.createElement('div');
     div.className = 'rules-sec';
     const h = document.createElement('h3');
     h.textContent = sec.title;
     div.appendChild(h);
     const ul = document.createElement('ul');
-    (sec.items || []).forEach(item => {
+    arr(sec.items).forEach(item => {
       const li = document.createElement('li');
       setFmt(li, item);
       ul.appendChild(li);
