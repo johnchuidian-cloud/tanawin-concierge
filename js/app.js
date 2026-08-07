@@ -225,15 +225,29 @@ function initRequests(content) {
   refreshMyRequests();
 }
 
+// Tickets are scoped to the room code that created them — a device that
+// switches rooms (front desk, a guest's next stay) must not show the old
+// room's requests. Legacy tickets without a code are dropped.
 function myRequests() {
-  try { return JSON.parse(localStorage.getItem(REQ_KEY) || '[]'); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(REQ_KEY) || '[]')
+      .filter(r => r.code && r.code === roomCode);
+  } catch { return []; }
+}
+
+function allStoredRequests() {
+  try { return JSON.parse(localStorage.getItem(REQ_KEY) || '[]').filter(r => r.code); } catch { return []; }
 }
 
 function saveMyRequests(list) {
-  // keep the newest 8, drop anything older than 48h
+  // `list` is the CURRENT room's tickets — merge back with other rooms'
+  // so switching rooms never wipes anyone's history. Per room: newest 8;
+  // everything older than 48h drops.
   const cutoff = Date.now() - 48 * 3600 * 1000;
+  const fresh = r => new Date(r.created).getTime() > cutoff;
+  const others = allStoredRequests().filter(r => r.code !== roomCode && fresh(r));
   localStorage.setItem(REQ_KEY, JSON.stringify(
-    list.filter(r => new Date(r.created).getTime() > cutoff).slice(-8)));
+    others.concat(list.filter(fresh).slice(-8))));
 }
 
 function renderMyRequests() {
@@ -257,8 +271,11 @@ function renderMyRequests() {
     const st = document.createElement('span');
     st.className = `myreq-status st-${r.status || 'new'}`;
     st.textContent = STATUS_LABEL[r.status] || STATUS_LABEL.new;
+    const right = document.createElement('div');
+    right.className = 'myreq-right';
+    right.appendChild(st);
     row.appendChild(kind);
-    row.appendChild(st);
+    row.appendChild(right);
     // A still-new request can be taken back before staff pick it up.
     if (!r.status || r.status === 'new') {
       const cancel = document.createElement('button');
@@ -283,7 +300,7 @@ function renderMyRequests() {
           cancel.disabled = false;
         }
       };
-      row.appendChild(cancel);
+      right.appendChild(cancel);
     }
     wrap.appendChild(row);
   });
@@ -520,7 +537,7 @@ $('reqSend').onclick = async () => {
     }
     if (summary.length > 70) summary = summary.slice(0, 67) + '…';
     const list = myRequests();
-    list.push({ id: data.id, kind, status: 'new', created: new Date().toISOString(), summary: summary || undefined });
+    list.push({ id: data.id, kind, status: 'new', created: new Date().toISOString(), summary: summary || undefined, code: roomCode });
     saveMyRequests(list);
     renderMyRequests();
     const body = $('reqBody');

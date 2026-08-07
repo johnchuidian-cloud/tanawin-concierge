@@ -384,19 +384,30 @@ main .card { scroll-margin-top: 4.2rem; }
 .myreq-row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 0.7rem;
   padding: 0.45rem 0;
   border-top: 1px solid var(--sand-deep);
   font-size: 0.88rem;
 }
-.myreq-kind { color: var(--ink-soft); }
+/* the text column must win the width fight on phones — status + Cancel
+   stack in a compact right column instead of squeezing it */
+.myreq-kind { color: var(--ink-soft); flex: 1; min-width: 0; }
+.myreq-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  max-width: 45%;
+}
 .myreq-detail {
   display: block;
   color: var(--ink-muted);
   font-size: 0.8rem;
   margin-top: 0.1rem;
 }
-.myreq-status { white-space: nowrap; font-weight: 600; }
+.myreq-status { font-weight: 600; text-align: right; }
 .myreq-status.st-new { color: var(--ink-muted); }
 .myreq-status.st-acknowledged { color: var(--maroon-soft); }
 .myreq-status.st-done { color: #2E7D32; }
