@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#9A3518">
+  <title>Tanawin Concierge — Room Cards</title>
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/staff.css">
+  <style>
+    /* screen-side room list */
+    .room-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .room-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      padding: 0.7rem 0.9rem;
+    }
+    .room-row .name { font-weight: 600; }
+    .room-row .kind { font-size: 0.75rem; color: var(--ink-muted); margin-left: 0.4rem; }
+    .print-btn {
+      background: var(--maroon); color: var(--cream-on-maroon); border: none;
+      border-radius: 10px; padding: 0.5rem 1rem; font-size: 0.9rem;
+      font-family: inherit; cursor: pointer; white-space: nowrap;
+    }
+    .net-choice { margin: 0.6rem 0 1rem; }
+    .net-choice .chip {
+      border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+      border-radius: 999px; padding: 0.45rem 1rem; font-size: 0.9rem;
+      font-family: inherit; cursor: pointer; margin-right: 0.5rem;
+    }
+    .net-choice .chip.selected { background: var(--maroon); border-color: var(--maroon); color: var(--cream-on-maroon); }
+
+    /* the poster itself — exact 11x8.5in layout, scaled for screen preview */
+    .poster {
+      width: 11in; height: 8.5in; overflow: hidden;
+      background: #FBFAF6; color: #1F1B16;
+      display: flex; flex-direction: column;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .poster .band {
+      background: #9A3518; color: #F1E4D6;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.28in 0.7in;
+    }
+    .poster .word { font-size: 34pt; font-weight: 700; letter-spacing: 0.04em; }
+    .poster .word .i { position: relative; }
+    .poster .word .i .fl { position: absolute; top: -0.5em; left: 46%; transform: translateX(-50%); font-size: 0.5em; }
+    .poster .proom { font-size: 24pt; font-weight: 600; background: rgba(255,255,255,0.14); border-radius: 999px; padding: 0.12in 0.45in; }
+    .poster .panels { flex: 1; display: flex; align-items: stretch; padding: 0.3in 0.7in; gap: 0.7in; min-height: 0; }
+    .poster .panel {
+      flex: 1; background: #fff; border: 2px solid #E6D8C9; border-radius: 0.25in;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.18in; padding: 0.25in;
+    }
+    .poster .panel h2 { color: #9A3518; font-size: 20pt; margin: 0; }
+    .poster .panel svg { width: 3.35in; height: 3.35in; }
+    .poster .panel p { font-size: 12.5pt; color: #3F392F; text-align: center; line-height: 1.45; max-width: 4.4in; margin: 0; }
+    .poster .pfoot { text-align: center; color: #6E6759; font-size: 10.5pt; padding: 0.05in 0 0.22in; }
+
+    /* on-screen preview: scaled down inside a frame */
+    #previewWrap { display: none; margin-top: 1rem; }
+    #previewWrap.active { display: block; }
+    .preview-frame { width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--sand); padding: 0.5rem; }
+    .preview-scale { transform: scale(0.30); transform-origin: top left; width: 11in; height: 8.5in; }
+    .preview-frame .holder { width: calc(11in * 0.30); height: calc(8.5in * 0.30); overflow: hidden; margin: 0 auto; }
+    .print-now {
+      width: 100%; margin-top: 0.7rem;
+      background: var(--maroon); color: var(--cream-on-maroon); border: none;
+      border-radius: 12px; padding: 0.85rem; font-size: 1.05rem;
+      font-family: inherit; cursor: pointer;
+    }
+
+    /* print: ONLY the poster, exact landscape short bond */
+    @media print {
+      @page { size: 11in 8.5in; margin: 0; }
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; }
+      .preview-scale { transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login" class="gate hidden">
+    <img class="gate-logo" src="assets/tanawin-icon.jpg" alt="Tanawin">
+    <div class="logo-mark gate-word">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n</div>
+    <p class="gate-sub">Room Cards</p>
+    <div id="loginPicker"></div>
+    <div id="loginPinWrap" class="hidden">
+      <p class="gate-hint" id="loginWho"></p>
+      <input id="loginPin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="PIN">
+      <p id="loginError" class="gate-error hidden"></p>
+      <p><button id="pickSomeoneElse" class="linklike">Someone else</button></p>
+    </div>
+    <p class="gate-hint muted">Same name and PIN as the Menu dashboard.</p>
+  </div>
+
+  <div id="app" class="hidden">
+    <header class="topbar">
+      <div class="logo-mark">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n <span class="topbar-tag">Room cards</span></div>
+      <div class="topbar-right">
+        <a class="hub-btn" href="staff.html">&#9998; Editor</a>
+        <a class="hub-btn" id="hubBtn" href="#" title="Tanawin Hub">&#8962; Hub</a>
+      </div>
+    </header>
+
+    <main id="editor">
+      <p class="ed-note">Pick a room to make its printed card: a wifi QR and a
+      scan-to-open app QR with that room's code built in. <strong>Whenever a room's
+      code changes, print a fresh card</strong> — the old QR stops working the moment
+      the code does. Print at 100% / actual size, landscape short bond.</p>
+
+      <div class="ed-field">
+        <label>Wifi network on the card</label>
+        <div class="net-choice" id="netChoice"></div>
+      </div>
+
+      <div class="room-list" id="roomList"><p class="muted">Loading rooms…</p></div>
+
+      <div id="previewWrap">
+        <div class="preview-frame"><div class="holder"><div class="preview-scale" id="printArea"></div></div></div>
+        <button class="print-now" id="printBtn">&#128424; Print this card</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/cards.js"></script>
+</body>
+</html>

@@ -39,6 +39,12 @@ content row) sets guest-view text size (normal/large/xlarge) and background
 accepts Telegram-style inline markers, rendered safely (no innerHTML):
 `**bold**`, `__italic__`, `++underline++`.
 
+**Room cards (`cards.html`):** staff-side poster printer (handoff §8). Pick a
+room → landscape short-bond card with the wifi QR (network selectable) and the
+room's `?code=` deep-link QR → browser print dialog at exact 11×8.5in. This is
+what makes code rotation routine: change a code, print a fresh card. Reads
+`rooms` under the staff session; codes never leave the authenticated page.
+
 **Admin preview:** the editor's "👁 Guest view" button opens `/?preview=1` in a
 new tab — it reuses the editor's login session to render the guest view exactly
 as guests see it (plus a bottom banner with a back link), no room code needed.
