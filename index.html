@@ -50,6 +50,7 @@
       <button class="rail-menu" data-target="menuCard" title="Order food" aria-label="Order food">&#127859;</button>
       <button data-target="contactCard" title="Contact" aria-label="Contact">&#128222;</button>
       <button data-target="rulesCard" title="House rules" aria-label="House rules">&#127794;</button>
+      <button data-target="feedbackCard" title="How was your stay?" aria-label="How was your stay?">&#11088;</button>
     </nav>
 
     <main id="content">
@@ -120,6 +121,20 @@
       <section class="card" id="rulesCard">
         <h2><span class="card-ico">&#127794;</span> House rules</h2>
         <div id="rulesList"></div>
+      </section>
+
+      <!-- Feedback (approved 2026-08-07): private by default; 4-5 stars get a
+           Google nudge when the link is configured -->
+      <section class="card" id="feedbackCard">
+        <h2><span class="card-ico">&#11088;</span> How was your stay?</h2>
+        <div id="fbForm">
+          <div class="fb-stars" id="fbStars" aria-label="Rate your stay"></div>
+          <textarea id="fbEnjoyed" class="req-note" placeholder="What did you enjoy most? (optional)"></textarea>
+          <textarea id="fbImprove" class="req-note" placeholder="What could we make better? (optional)"></textarea>
+          <input id="fbAppNote" class="fb-app" placeholder="Anything about this app? (optional)">
+          <button id="fbSend" class="req-send fb-send">Send feedback</button>
+        </div>
+        <div id="fbDone" class="req-done-msg hidden"></div>
       </section>
 
       <footer class="footer">

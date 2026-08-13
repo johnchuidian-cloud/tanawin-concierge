@@ -553,6 +553,69 @@ function buildEditor() {
     root.appendChild(div);
   }
 
+  // Guest feedback — Google link config + a read-only inbox of what guests
+  // said. Not in the live request queue on purpose: feedback is read over
+  // coffee, not chimed about.
+  {
+    const key = 'feedback_config';
+    const div = blockShell('Guest feedback', key,
+      'Happy guests (4-5 stars) get a "share on Google" button — once you save your Google Reviews link below. Everything guests write lands here either way, newest first.');
+    const v = val(key);
+    const gurl = textInput(v.google_url, 'Your Google Reviews link (https://g.page/r/…)');
+    div.appendChild(field('Google Reviews link', gurl));
+    actions(div, key, () => {
+      const u = gurl.value.trim();
+      if (u && !/^https:\/\//.test(u)) {
+        toast('The link should start with https://', true);
+        return;
+      }
+      return save(key, { google_url: u });
+    });
+
+    const inbox = document.createElement('div');
+    inbox.className = 'fb-inbox';
+    const loading = document.createElement('p');
+    loading.className = 'ed-reviewed';
+    loading.textContent = 'Loading feedback…';
+    inbox.appendChild(loading);
+    div.appendChild(inbox);
+    db.from('concierge_feedback')
+      .select('room_name, rating, enjoyed, improve, app_note, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30)
+      .then(({ data, error }) => {
+        inbox.innerHTML = '';
+        if (error) return;
+        if (!data || !data.length) {
+          const p = document.createElement('p');
+          p.className = 'ed-reviewed';
+          p.textContent = 'No feedback yet.';
+          inbox.appendChild(p);
+          return;
+        }
+        data.forEach(f => {
+          const row = document.createElement('div');
+          row.className = 'fb-row';
+          const head = document.createElement('div');
+          head.className = 'fb-head';
+          head.textContent = `${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}  ${f.room_name} · ${new Date(f.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+          row.appendChild(head);
+          [['Enjoyed', f.enjoyed], ['Improve', f.improve], ['About the app', f.app_note]].forEach(([label, text]) => {
+            if (!text) return;
+            const p = document.createElement('p');
+            p.className = 'fb-text';
+            const b = document.createElement('strong');
+            b.textContent = label + ': ';
+            p.appendChild(b);
+            p.appendChild(document.createTextNode(text));
+            row.appendChild(p);
+          });
+          inbox.appendChild(row);
+        });
+      });
+    root.appendChild(div);
+  }
+
   // House rules
   {
     const key = 'house_rules';

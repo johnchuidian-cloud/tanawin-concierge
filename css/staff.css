@@ -162,6 +162,11 @@
 .map-edit-holder { position: relative; display: inline-block; }
 .map-edit-holder .map-marker-label { font-size: 0.5rem; }
 
+.fb-inbox { margin-top: 0.8rem; }
+.fb-row { border-top: 1px solid var(--sand-deep); padding: 0.55rem 0; }
+.fb-head { font-weight: 600; color: var(--ink-soft); font-size: 0.9rem; }
+.fb-text { font-size: 0.88rem; color: var(--ink-soft); margin: 0.2rem 0 0; }
+
 .toast {
   position: fixed;
   bottom: 1.2rem;

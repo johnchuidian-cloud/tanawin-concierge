@@ -162,8 +162,94 @@ function render(data) {
     : `${MENU_URL}/?from=concierge`;
 
   initRequests(c);
+  initFeedback(block(c, 'feedback_config').v);
   applyOrder(block(c, 'layout').v);
 }
+
+// ---------- feedback (approved 2026-08-07) ----------
+//
+// Private by default: everything lands in concierge_feedback for the staff.
+// The routing trick: 4-5 stars ALSO get a "share it on Google" button — but
+// only when Lexi has saved the Google link (feedback_config). Lower ratings
+// end at a plain thank-you, so problems come to the desk, not to Google.
+
+let fbGoogleUrl = '';
+let fbRating = 0;
+
+function initFeedback(v) {
+  fbGoogleUrl = str(v.google_url);
+  fbRating = 0;
+  $('fbForm').classList.remove('hidden');
+  $('fbDone').classList.add('hidden');
+  const wrap = $('fbStars');
+  wrap.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.textContent = '★';
+    b.setAttribute('aria-label', `${i} star${i > 1 ? 's' : ''}`);
+    b.onclick = () => {
+      fbRating = i;
+      [...wrap.children].forEach((el, idx) => el.classList.toggle('lit', idx < i));
+    };
+    wrap.appendChild(b);
+  }
+}
+
+$('fbSend').onclick = async () => {
+  const btn = $('fbSend');
+  if (!roomCode) {
+    btn.textContent = 'Not available in preview';
+    return;
+  }
+  if (!fbRating) {
+    btn.textContent = 'Tap the stars first';
+    setTimeout(() => { btn.textContent = 'Send feedback'; }, 1600);
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    const { data, error } = await db.rpc('concierge_submit_feedback', {
+      p_access_code: roomCode,
+      p_rating: fbRating,
+      p_enjoyed: $('fbEnjoyed').value.trim() || null,
+      p_improve: $('fbImprove').value.trim() || null,
+      p_app_note: $('fbAppNote').value.trim() || null,
+    });
+    if (error || !data || !data.ok) {
+      btn.disabled = false;
+      btn.textContent = data && data.reason === 'rate_limited'
+        ? 'Thanks — we\'ve got plenty from your room today!'
+        : 'Could not send — please try again';
+      return;
+    }
+    $('fbForm').classList.add('hidden');
+    const done = $('fbDone');
+    done.innerHTML = '';
+    const big = document.createElement('div');
+    big.className = 'big';
+    big.textContent = fbRating >= 4 ? '🧡' : '🙏';
+    const text = document.createElement('p');
+    text.textContent = fbRating >= 4
+      ? 'Thank you — that made our day!'
+      : 'Thank you for telling us — we\'ll do better, and the front desk is always ready to make things right during your stay.';
+    done.appendChild(big);
+    done.appendChild(text);
+    if (fbRating >= 4 && fbGoogleUrl) {
+      const g = document.createElement('a');
+      g.className = 'fb-google';
+      g.href = fbGoogleUrl;
+      g.target = '_blank';
+      g.rel = 'noopener';
+      g.textContent = '⭐ Share it on Google — it helps us a lot';
+      done.appendChild(g);
+    }
+    done.classList.remove('hidden');
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'No connection — please try again';
+  }
+};
 
 // ---------- section order (Lexi-editable via the `layout` block) ----------
 
@@ -176,11 +262,12 @@ const CARD_FOR = {
   key_info: 'keyCard',
   menu_card: 'menuCard',
   contact: 'contactCard',
+  feedback: 'feedbackCard',
 };
 // Default: wifi first (the most-asked question), house rules second,
-// requests third (the third most-asked: room/kitchen items).
+// requests third (the third most-asked: room/kitchen items); feedback last.
 const DEFAULT_ORDER = ['wifi', 'house_rules', 'requests', 'pool_hours',
-  'getting_around', 'key_info', 'menu_card', 'contact'];
+  'getting_around', 'key_info', 'menu_card', 'contact', 'feedback'];
 
 function applyOrder(v) {
   const order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)

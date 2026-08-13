@@ -520,6 +520,42 @@ main .card { scroll-margin-top: 4.2rem; }
 .req-done-msg { text-align: center; padding: 0.5rem 0; }
 .req-done-msg .big { font-size: 2rem; }
 
+/* ---------- feedback ---------- */
+.fb-stars { display: flex; gap: 0.4rem; justify-content: center; margin: 0.3rem 0 0.5rem; }
+.fb-stars button {
+  background: none;
+  border: none;
+  font-size: 2.1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--sand-deep);
+  padding: 0.1rem;
+}
+.fb-stars button.lit { color: #E8A33D; }
+.fb-app {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--cream);
+  margin-top: 0.6rem;
+}
+.fb-send { width: 100%; margin-top: 0.7rem; }
+.fb-google {
+  display: inline-block;
+  margin-top: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .footer {
   text-align: center;
   color: var(--ink-muted);
