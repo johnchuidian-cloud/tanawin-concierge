@@ -1,4 +1,5 @@
 // Tanawin Concierge — guest app (Tanawin Info, Phase 1).
+// settling-test marker 2026-08-18: js-only deploy, no HTML change.
 //
 // Flow: a room access code (from the printed card's QR ?code= param, or typed
 // once) is validated by the concierge_bootstrap RPC, which also returns all
