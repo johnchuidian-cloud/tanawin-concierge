@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#9A3518">
+  <title>Tanawin Concierge — Guest reviews</title>
+  <link rel="icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/staff.css">
+</head>
+<body>
+
+  <div id="app">
+    <header class="topbar">
+      <div class="logo-mark">Tanaw<span class="logo-i">&#305;<span class="flower">&#10040;</span></span>n <span class="topbar-tag">Guest reviews</span></div>
+      <div class="topbar-right">
+        <a class="hub-btn" href="staff.html">&#8592; Content</a>
+        <a class="hub-btn" id="hubBtn" href="#" title="Tanawin Hub">&#8962; Hub</a>
+      </div>
+    </header>
+
+    <main id="reviews">
+      <!-- Month index -->
+      <section id="monthsView">
+        <p class="ed-note">Every review guests have left, by month. Newest month first
+        — tap one to read it.</p>
+        <div id="monthsList"><p class="ed-reviewed">Loading…</p></div>
+      </section>
+
+      <!-- One month -->
+      <section id="monthView" class="hidden">
+        <button id="backBtn" class="linklike">&#8592; All months</button>
+        <div class="ed-block">
+          <h2 id="monthTitle"></h2>
+          <p class="ed-reviewed" id="monthSummary"></p>
+          <div id="monthRows"></div>
+          <button id="moreBtn" class="review-btn hidden">Load more</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/reviews.js"></script>
+  <script src="js/update-check.js"></script>
+</body>
+</html>

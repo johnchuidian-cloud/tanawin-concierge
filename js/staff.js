@@ -268,6 +268,11 @@ function buildEditor() {
       return save(key, { google_url: u });
     });
 
+    const archive = document.createElement('a');
+    archive.className = 'fb-archive';
+    archive.href = 'reviews.html';
+    archive.textContent = 'See all reviews by month →';
+
     const inbox = document.createElement('div');
     inbox.className = 'fb-inbox';
     const loading = document.createElement('p');
@@ -292,16 +297,25 @@ function buildEditor() {
         // Every created_at comes from one source in one format, so a string
         // compare is safe here (and skips a timezone round-trip).
         const seen = localStorage.getItem(SEEN_KEY) || '';
-        const unread = data.filter(f => f.created_at > seen);
-        if (unread.length) {
-          badge.textContent = `${unread.length} new`;
-          badge.classList.remove('hidden');
-          // Mark read only once it's genuinely been on screen — an editor
-          // opened and closed in two seconds shouldn't clear the count.
-          setTimeout(() => {
-            if (!document.hidden) localStorage.setItem(SEEN_KEY, data[0].created_at);
-          }, 4000);
-        }
+        // Count on the server, not across these 30 rows: the badge should say
+        // 34 when there are 34. The inbox is a window, not the table.
+        db.from('concierge_feedback')
+          .select('id', { count: 'exact', head: true })
+          .gt('created_at', seen)
+          .then(({ count }) => {
+            if (!count) return;
+            badge.textContent = `${count} new`;
+            badge.classList.remove('hidden');
+            // Only clear the count when every unread one was actually on this
+            // page — beyond a screenful the rest live in the archive, and
+            // marking them read on her behalf is how feedback goes unread.
+            if (count > data.length) return;
+            // And only once it's genuinely been seen: an editor opened and
+            // closed in two seconds shouldn't clear it either.
+            setTimeout(() => {
+              if (!document.hidden) localStorage.setItem(SEEN_KEY, data[0].created_at);
+            }, 4000);
+          });
         data.forEach(f => {
           const row = document.createElement('div');
           row.className = 'fb-row';
@@ -329,6 +343,7 @@ function buildEditor() {
           inbox.appendChild(row);
         });
       });
+    div.appendChild(archive);
     root.appendChild(div);
   }
 
