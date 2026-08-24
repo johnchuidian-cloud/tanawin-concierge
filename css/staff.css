@@ -167,6 +167,34 @@
 .fb-head { font-weight: 600; color: var(--ink-soft); font-size: 0.9rem; }
 .fb-text { font-size: 0.88rem; color: var(--ink-soft); margin: 0.2rem 0 0; }
 
+/* Unread feedback: a count beside the heading, a marker on the rows it means. */
+.fb-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  background: var(--maroon);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  vertical-align: middle;
+}
+.fb-row.fb-unread {
+  border-left: 3px solid var(--maroon-light);
+  padding-left: 0.6rem;
+  margin-left: -0.6rem;
+}
+.fb-pill {
+  margin-left: 0.45rem;
+  background: var(--sand);
+  color: var(--maroon);
+  font-size: 0.66rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+
 .toast {
   position: fixed;
   bottom: 1.2rem;

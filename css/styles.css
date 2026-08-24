@@ -407,6 +407,28 @@ main .card { scroll-margin-top: 4.2rem; }
   font-size: 0.8rem;
   margin-top: 0.1rem;
 }
+/* A status that changed while the guest was watching: a short warm wash
+   across the row plus a nudge on the label. Motion-reduced guests get the
+   colour change alone. */
+@keyframes myreq-flip {
+  from { background: var(--sand-deep); }
+  to   { background: transparent; }
+}
+@keyframes myreq-flip-label {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.myreq-row.myreq-flip { animation: myreq-flip 1.8s ease-out; }
+.myreq-row.myreq-flip .myreq-status {
+  animation: myreq-flip-label 800ms ease-out;
+  transform-origin: right center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .myreq-row.myreq-flip,
+  .myreq-row.myreq-flip .myreq-status { animation: none; }
+}
+
 .myreq-status { font-weight: 600; text-align: right; }
 .myreq-status.st-new { color: var(--ink-muted); }
 .myreq-status.st-acknowledged { color: var(--maroon-soft); }

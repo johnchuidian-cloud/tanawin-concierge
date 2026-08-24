@@ -345,12 +345,16 @@ function saveMyRequests(list) {
     others.concat(list.filter(fresh).slice(-8))));
 }
 
-function renderMyRequests() {
+// `flipped` (optional Set of request ids) marks the rows whose status just
+// changed, so the guest notices the change instead of finding a different word
+// than the one they last looked at.
+function renderMyRequests(flipped) {
   const wrap = $('myRequests');
   wrap.innerHTML = '';
   myRequests().slice().reverse().forEach(r => {
     const row = document.createElement('div');
     row.className = 'myreq-row';
+    if (flipped && flipped.has(r.id)) row.classList.add('myreq-flip');
     const kind = document.createElement('span');
     kind.className = 'myreq-kind';
     const t = new Date(r.created);
@@ -399,27 +403,67 @@ function renderMyRequests() {
     }
     wrap.appendChild(row);
   });
+  syncPolling();
 }
 
 async function refreshMyRequests() {
   const list = myRequests();
   if (!list.length) return;
-  let changed = false;
+  const flipped = new Set();
   for (const r of list) {
     if (r.status === 'done' || r.status === 'cancelled') continue;
     try {
       const { data } = await db.rpc('concierge_request_status', { p_id: r.id });
       if (data && data.ok && data.status !== r.status) {
         r.status = data.status;
-        changed = true;
+        flipped.add(r.id);
       }
-    } catch { /* offline — try again next load */ }
+    } catch { /* offline — try again next tick */ }
   }
-  if (changed) {
+  if (flipped.size) {
     saveMyRequests(list);
-    renderMyRequests();
+    renderMyRequests(flipped);
   }
 }
+
+// ---------- live status ----------
+//
+// While a ticket is still open AND the guest is actually looking at the page,
+// re-read the status peephole every 10s so "Acknowledged — on it!" appears on
+// its own. Deliberately a poll, not realtime: anon has no select on
+// concierge_requests (a subscription would leak every room's photos and notes
+// — if this ever becomes realtime, use a per-ticket broadcast channel keyed by
+// the request uuid, status only). And never a page reload — a guest may be
+// halfway through typing another request.
+
+const POLL_MS = 10000;
+let pollTimer = null;
+
+// Open tickets only, and only inside the same 48h window saveMyRequests keeps
+// — a request staff never closed shouldn't have a forgotten open tab polling
+// for it days later.
+function pendingRequests() {
+  const cutoff = Date.now() - 48 * 3600 * 1000;
+  return myRequests().filter(r =>
+    (!r.status || r.status === 'new' || r.status === 'acknowledged') &&
+    new Date(r.created).getTime() > cutoff);
+}
+
+// Idempotent: safe to call after any render. Polls only when there is
+// something to learn and someone to see it.
+function syncPolling() {
+  clearInterval(pollTimer);
+  pollTimer = null;
+  if (document.hidden || !pendingRequests().length) return;
+  pollTimer = setInterval(refreshMyRequests, POLL_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  // Coming back from a locked phone: catch up at once rather than waiting out
+  // a full interval, since that's exactly when staff have had time to act.
+  if (!document.hidden) refreshMyRequests();
+  syncPolling();
+});
 
 // Out-of-hours check mirrors the server's (which has the final say) so the
 // guest is warned BEFORE sending, not only after.
