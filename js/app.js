@@ -435,6 +435,12 @@ async function refreshMyRequests() {
 
 // ---------- live status ----------
 //
+// Concierge deliberately runs NO realtime subscription. Beyond the anon-select
+// problem, Menu found (2026-08-24) that postgres_changes ships WHOLE ROWS: a
+// subscription to concierge_requests would push every problem photo over the
+// websocket to every subscriber, blob and all. If this ever becomes realtime,
+// it must be a per-ticket broadcast channel carrying status only.
+//
 // While a ticket is still open AND the guest is actually looking at the page,
 // re-read the status peephole every 10s so "Acknowledged — on it!" appears on
 // its own. Deliberately a poll, not realtime: anon has no select on
