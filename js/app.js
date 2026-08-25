@@ -297,6 +297,10 @@ function applyOrder(v) {
 // as claim tickets; statuses come from the concierge_request_status peephole.
 
 const REQ_KEY = 'concierge_my_requests';
+// How long a ticket stays live to this device. saveMyRequests drops rows past
+// it, pendingRequests stops polling for them, and refreshMyRequests stops
+// asking after them — one number so those three can't drift apart.
+const TICKET_WINDOW_MS = 48 * 3600 * 1000;
 const KIND_LABEL = {
   towel_change: 'Bath towel change',
   bin_clearing: 'Bin clearing',
@@ -338,7 +342,7 @@ function saveMyRequests(list) {
   // `list` is the CURRENT room's tickets — merge back with other rooms'
   // so switching rooms never wipes anyone's history. Per room: newest 8;
   // everything older than 48h drops.
-  const cutoff = Date.now() - 48 * 3600 * 1000;
+  const cutoff = Date.now() - TICKET_WINDOW_MS;
   const fresh = r => new Date(r.created).getTime() > cutoff;
   const others = allStoredRequests().filter(r => r.code !== roomCode && fresh(r));
   localStorage.setItem(REQ_KEY, JSON.stringify(
@@ -411,7 +415,10 @@ async function refreshMyRequests() {
   if (!list.length) return;
   const flipped = new Set();
   for (const r of list) {
-    if (r.status === 'done' || r.status === 'cancelled') continue;
+    // Same test the poller uses. These disagreed until 2026-08-24: polling
+    // stopped at 48h but this loop kept asking after tickets it had given up
+    // on, so a forgotten tab still fired RPCs for them on every return.
+    if (!isOpenTicket(r)) continue;
     try {
       const { data } = await db.rpc('concierge_request_status', { p_id: r.id });
       if (data && data.ok && data.status !== r.status) {
@@ -439,14 +446,16 @@ async function refreshMyRequests() {
 const POLL_MS = 10000;
 let pollTimer = null;
 
-// Open tickets only, and only inside the same 48h window saveMyRequests keeps
-// — a request staff never closed shouldn't have a forgotten open tab polling
-// for it days later.
+// Still worth asking about: not finished, and inside the same window
+// saveMyRequests keeps — a request staff never closed shouldn't have a
+// forgotten open tab polling for it days later.
+function isOpenTicket(r) {
+  return (!r.status || r.status === 'new' || r.status === 'acknowledged') &&
+    new Date(r.created).getTime() > Date.now() - TICKET_WINDOW_MS;
+}
+
 function pendingRequests() {
-  const cutoff = Date.now() - 48 * 3600 * 1000;
-  return myRequests().filter(r =>
-    (!r.status || r.status === 'new' || r.status === 'acknowledged') &&
-    new Date(r.created).getTime() > cutoff);
+  return myRequests().filter(isOpenTicket);
 }
 
 // Idempotent: safe to call after any render. Polls only when there is

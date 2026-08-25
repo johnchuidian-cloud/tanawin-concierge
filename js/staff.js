@@ -299,11 +299,18 @@ function buildEditor() {
         const seen = localStorage.getItem(SEEN_KEY) || '';
         // Count on the server, not across these 30 rows: the badge should say
         // 34 when there are 34. The inbox is a window, not the table.
-        db.from('concierge_feedback')
-          .select('id', { count: 'exact', head: true })
-          .gt('created_at', seen)
-          .then(({ count }) => {
-            if (!count) return;
+        //
+        // No watermark yet means nothing has been read, so ask for the whole
+        // count and send NO filter at all. Passing the empty string as a
+        // timestamp is a PostgREST 400 (22007 invalid input syntax), which
+        // fails silently into "no badge" — on the one open that matters most,
+        // the very first one.
+        let countQ = db.from('concierge_feedback')
+          .select('id', { count: 'exact', head: true });
+        if (seen) countQ = countQ.gt('created_at', seen);
+        countQ
+          .then(({ count, error }) => {
+            if (error || !count) return;
             badge.textContent = `${count} new`;
             badge.classList.remove('hidden');
             // Only clear the count when every unread one was actually on this
