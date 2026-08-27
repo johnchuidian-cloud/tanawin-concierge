@@ -315,7 +315,7 @@ const STATUS_LABEL = {
 };
 let reqItems = [];    // Lexi's request_items list (via bootstrap)
 let reqConfig = {};   // request_config: open / last-call times
-let reqState = null;  // open sheet state: {kind, qty:{}, notes:{}, photo}
+let reqState = null;  // open sheet state: {kind, qty:{}, notes:{}}
 
 function initRequests(content) {
   reqItems = arr(block(content, 'request_items').v.items).filter(i => i && typeof i === 'object');
@@ -512,7 +512,7 @@ function closeReqSheet() {
 }
 
 function openReqSheet(kind) {
-  reqState = { kind, qty: {}, notes: {}, photo: null };
+  reqState = { kind, qty: {}, notes: {} };
   $('reqTitle').textContent = KIND_LABEL[kind];
   $('reqOoh').textContent = OOH_TEXT;
   $('reqOoh').classList.toggle('hidden', !isOutOfHours());
@@ -580,22 +580,12 @@ function openReqSheet(kind) {
     note.placeholder = 'What\'s the problem? e.g. "The aircon in our room is dripping."';
     note.oninput = () => { reqState.notes.__main = note.value; };
     body.appendChild(note);
-    const file = document.createElement('input');
-    file.type = 'file';
-    file.accept = 'image/*';
-    file.style.marginTop = '0.6rem';
-    const preview = document.createElement('img');
-    preview.className = 'req-photo-preview hidden';
-    file.onchange = () => {
-      if (!file.files || !file.files[0]) return;
-      compressPhoto(file.files[0]).then(dataUrl => {
-        reqState.photo = dataUrl;
-        preview.src = dataUrl;
-        preview.classList.remove('hidden');
-      }).catch(() => { reqState.photo = null; });
-    };
-    body.appendChild(file);
-    body.appendChild(preview);
+    // No photo attachment, by Lexi's decision (2026-08-24): a guest shouldn't
+    // have to photograph a fault to be taken seriously, and the picture lands
+    // in their own camera roll on the way. A problem is attended to on the
+    // strength of the description. The `photo_data` column and p_photo
+    // parameter stay in place, unused, so the six existing rows and Menu's
+    // reader keep working — nothing new is ever written to them.
   }
 
   if (kind === 'room_items') {
@@ -608,33 +598,6 @@ function openReqSheet(kind) {
 
   $('reqBackdrop').classList.remove('hidden');
   $('reqSheet').classList.remove('hidden');
-}
-
-// Downscale to ≤1100px. PNG sources stay PNG when the result fits the cap
-// (lossless — crisp for screenshots); otherwise fall back to JPEG, retrying
-// at lower quality. Camera photos are JPEG anyway.
-function compressPhoto(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, 1100 / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      let out = null;
-      if (file.type === 'image/png') {
-        const png = canvas.toDataURL('image/png');
-        if (png.length <= 380000) out = png;
-      }
-      if (!out) out = canvas.toDataURL('image/jpeg', 0.7);
-      if (out.length > 380000) out = canvas.toDataURL('image/jpeg', 0.45);
-      URL.revokeObjectURL(img.src);
-      out.length > 380000 ? reject(new Error('too big')) : resolve(out);
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
 }
 
 $('reqSend').onclick = async () => {
@@ -675,7 +638,6 @@ $('reqSend').onclick = async () => {
       p_kind: kind,
       p_items: items,
       p_note: (reqState.notes.__main || '').trim() || null,
-      p_photo: reqState.photo,
     });
     if (error || !data) throw new Error('network');
     if (!data.ok) {

@@ -515,7 +515,6 @@ main .card { scroll-margin-top: 4.2rem; }
   background: var(--cream);
   margin-top: 0.6rem;
 }
-.req-photo-preview { max-width: 140px; border-radius: 10px; display: block; margin-top: 0.5rem; }
 .req-actions { display: flex; gap: 0.6rem; margin-top: 0.9rem; }
 .req-send {
   flex: 1;
