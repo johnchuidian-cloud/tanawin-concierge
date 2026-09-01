@@ -2,10 +2,12 @@
 # config rather than serving it — /_headers should return 404 once deployed,
 # which is the tell that it was picked up.
 #
-# CSP is REPORT-ONLY for now, deliberately. Concierge is in daily guest use
-# and a wrong policy breaks real screens mid-service; violations log to the
-# console instead. Flip the header name to Content-Security-Policy in a
-# SECOND deploy, once every screen and role has been clicked through.
+# CSP is ENFORCING as of the second deploy on 2026-09-01. It went out
+# report-only first, then every page was driven under an ENFORCING copy of
+# this exact policy before the flip: guest view, staff editor, reviews
+# archive and the room-card printer, including a generated pair of QR codes
+# and the Supabase-hosted map image. Zero violations, and a control image
+# from a disallowed host was correctly blocked, so the test had teeth.
 #
 # Built from what this app actually loads, verified against the source:
 #   script-src  jsdelivr = supabase-js UMD + qrcode-generator. There are NO
@@ -24,7 +26,7 @@
 #   default-src 'none' so anything overlooked shows up as a report rather
 #               than passing silently.
 /*
-  Content-Security-Policy-Report-Only: default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; font-src 'self'; connect-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; font-src 'self'; connect-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
