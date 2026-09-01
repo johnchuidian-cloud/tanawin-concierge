@@ -593,3 +593,19 @@ main .card { scroll-margin-top: 4.2rem; }
   cursor: pointer;
   padding: 0;
 }
+
+/* Welcome card — the greeting, pinned above the reorderable cards. Sand
+   rather than white so it reads as a greeting instead of another info
+   panel, and warmer type without being louder than the content beneath. */
+.welcome-card {
+  background: var(--sand);
+  border-color: var(--sand-deep);
+  text-align: center;
+}
+.welcome-card p {
+  margin: 0;
+  color: var(--maroon);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.45;
+}

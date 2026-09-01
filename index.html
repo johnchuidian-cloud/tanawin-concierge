@@ -55,6 +55,14 @@
 
     <main id="content">
 
+      <!-- Welcome. Deliberately NOT in the layout/rail set: a greeting is
+           first by definition, and applyOrder() only moves cards listed in
+           CARD_FOR, so this one stays pinned at the top. No rail button
+           either — it isn't a destination you navigate back to. -->
+      <section class="card welcome-card hidden" id="welcomeCard">
+        <p id="welcomeText"></p>
+      </section>
+
       <!-- Wifi -->
       <section class="card" id="wifiCard">
         <h2><span class="card-ico">&#128246;</span> Wifi</h2>

@@ -354,6 +354,19 @@ function buildEditor() {
     root.appendChild(div);
   }
 
+  // Welcome message — the first thing a guest reads. Sits above the
+  // reorderable cards on the guest page and is not part of Section order.
+  {
+    const key = 'welcome';
+    const div = blockShell('Welcome message', key,
+      'The greeting at the very top of the guest page. Leave it blank to hide the card entirely.');
+    const v = val(key);
+    const msg = textArea(v.message);
+    div.appendChild(field('Message', msg));
+    actions(div, key, () => save(key, { message: msg.value.trim() }));
+    root.appendChild(div);
+  }
+
   // Section order — how the guest page's cards are arranged. Arrows always
   // (reliable on phones); drag works on desktop as a bonus.
   {

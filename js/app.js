@@ -143,6 +143,7 @@ function render(data) {
   $('roomChip').textContent = data.room.name;
   const c = data.content || {};
 
+  renderWelcome(block(c, 'welcome').v);
   renderWifi(block(c, 'wifi').v);
   renderPools(block(c, 'pool_hours'));
   renderMap(block(c, 'getting_around').v);
@@ -165,6 +166,17 @@ function render(data) {
   initRequests(c);
   initFeedback(block(c, 'feedback_config').v);
   applyOrder(block(c, 'layout').v);
+}
+
+// The greeting guests land on. Lexi-editable like every other guest-visible
+// string, so changing the wording never needs a deploy; setFmt gives her the
+// same **bold** / __italic__ markers as the rest of the app. An empty message
+// hides the card rather than leaving a blank box at the top of the page.
+function renderWelcome(v) {
+  const card = $('welcomeCard');
+  const text = str(v.message);
+  card.classList.toggle('hidden', !text);
+  if (text) setFmt($('welcomeText'), text);
 }
 
 // ---------- feedback (approved 2026-08-07) ----------
