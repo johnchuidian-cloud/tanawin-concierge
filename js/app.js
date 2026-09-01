@@ -220,8 +220,8 @@ $('fbSend').onclick = async () => {
     if (error || !data || !data.ok) {
       btn.disabled = false;
       btn.textContent = data && data.reason === 'rate_limited'
-        ? 'Thanks — we\'ve got plenty from your room today!'
-        : 'Could not send — please try again';
+        ? 'Thanks! We\'ve got plenty from your room today.'
+        : 'Could not send. Please try again.';
       return;
     }
     $('fbForm').classList.add('hidden');
@@ -232,8 +232,8 @@ $('fbSend').onclick = async () => {
     big.textContent = fbRating >= 4 ? '🧡' : '🙏';
     const text = document.createElement('p');
     text.textContent = fbRating >= 4
-      ? 'Thank you — that made our day!'
-      : 'Thank you for telling us — we\'ll do better, and the front desk is always ready to make things right during your stay.';
+      ? 'Thank you! That made our day.'
+      : 'Thank you for telling us. We\'ll do better, and the front desk is always ready to make things right during your stay.';
     done.appendChild(big);
     done.appendChild(text);
     if (fbRating >= 4 && fbGoogleUrl) {
@@ -242,13 +242,13 @@ $('fbSend').onclick = async () => {
       g.href = fbGoogleUrl;
       g.target = '_blank';
       g.rel = 'noopener';
-      g.textContent = '⭐ Share it on Google — it helps us a lot';
+      g.textContent = '⭐ Share it on Google. It helps us a lot.';
       done.appendChild(g);
     }
     done.classList.remove('hidden');
   } catch {
     btn.disabled = false;
-    btn.textContent = 'No connection — please try again';
+    btn.textContent = 'No connection. Please try again.';
   }
 };
 
@@ -308,8 +308,8 @@ const KIND_LABEL = {
   problem: 'Problem report',
 };
 const STATUS_LABEL = {
-  new: 'Sent — waiting for staff',
-  acknowledged: 'Acknowledged — on it!',
+  new: 'Sent, waiting for staff',
+  acknowledged: 'Acknowledged, on it!',
   done: 'Done',
   cancelled: 'Cancelled',
 };
@@ -442,7 +442,7 @@ async function refreshMyRequests() {
 // it must be a per-ticket broadcast channel carrying status only.
 //
 // While a ticket is still open AND the guest is actually looking at the page,
-// re-read the status peephole every 10s so "Acknowledged — on it!" appears on
+// re-read the status peephole every 10s so "Acknowledged, on it!" appears on
 // its own. Deliberately a poll, not realtime: anon has no select on
 // concierge_requests (a subscription would leak every room's photos and notes
 // — if this ever becomes realtime, use a per-ticket broadcast channel keyed by
@@ -497,7 +497,7 @@ function isOutOfHours() {
   return hm >= lastCall || hm < open;
 }
 
-const OOH_TEXT = 'Staff are done for the day — your request is saved and they\'ll handle it when they\'re back at 7am.';
+const OOH_TEXT = 'Staff are done for the day. Your request is saved, and they\'ll handle it when they\'re back at 7am.';
 
 document.querySelectorAll('.req-btn').forEach(btn => {
   btn.onclick = () => openReqSheet(btn.dataset.kind);
@@ -643,8 +643,8 @@ $('reqSend').onclick = async () => {
     if (!data.ok) {
       $('reqSend').disabled = false;
       $('reqSend').textContent = data.reason === 'rate_limited'
-        ? 'Too many requests this hour — please ask the front desk'
-        : 'Could not send — please try again';
+        ? 'Too many requests this hour. Please ask the front desk.'
+        : 'Could not send. Please try again.';
       return;
     }
     let summary = '';
@@ -679,7 +679,7 @@ $('reqSend').onclick = async () => {
     setTimeout(closeReqSheet, 2600);
   } catch {
     $('reqSend').disabled = false;
-    $('reqSend').textContent = 'No connection — please try again';
+    $('reqSend').textContent = 'No connection. Please try again.';
   }
 };
 
@@ -774,7 +774,7 @@ function renderPools(b) {
   $('poolTip').classList.toggle('hidden', !v.tip);
   // Third-party content: show the quiet staleness note (handoff §10).
   $('poolAsOf').textContent = b.reviewed
-    ? `As of ${b.reviewed} — please confirm at the front desk.`
+    ? `As of ${b.reviewed}. Please confirm at the front desk.`
     : '';
 }
 

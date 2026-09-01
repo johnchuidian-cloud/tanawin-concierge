@@ -18,7 +18,7 @@
     <p class="gate-sub">Guest Services</p>
     <p class="gate-hint">Enter the 6-digit access code from your room card or ring binder.</p>
     <input id="gateCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••">
-    <p id="gateError" class="gate-error hidden">That code doesn't look right — please check the card in your room, or ask the front desk.</p>
+    <p id="gateError" class="gate-error hidden">That code doesn't look right. Please check the card in your room, or ask the front desk.</p>
     <p id="gateBusy" class="gate-busy hidden">Checking…</p>
   </div>
 
@@ -27,7 +27,7 @@
        without a staff session the preview flag just falls through to the
        normal code gate. -->
   <div id="previewBar" class="preview-bar hidden">
-    <span>Admin preview — this is exactly what guests see.</span>
+    <span>Admin preview: this is exactly what guests see.</span>
     <a href="staff.html">Back to editor</a>
   </div>
 
@@ -65,7 +65,7 @@
       <!-- Requests (Phase 2) -->
       <section class="card" id="requestCard">
         <h2><span class="card-ico">&#128718;</span> Request something</h2>
-        <p class="muted">Free for room guests — we'll bring it to your room.</p>
+        <p class="muted">Free for room guests. We'll bring it to your room.</p>
         <div class="req-buttons">
           <button class="req-btn" data-kind="towel_change"><span>&#129532;</span> Bath towel change</button>
           <button class="req-btn" data-kind="bin_clearing"><span>&#128465;</span> Bin clearing</button>
