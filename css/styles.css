@@ -604,6 +604,11 @@ main .card { scroll-margin-top: 4.2rem; }
 }
 .welcome-card p {
   margin: 0;
+  /* Show the message exactly as Lexi typed it. Without this, HTML collapses
+     her line breaks and leading spaces into single spaces, so a two-line
+     greeting silently became one wrapped paragraph. pre-wrap keeps both and
+     still wraps lines too long for a phone. */
+  white-space: pre-wrap;
   color: var(--maroon);
   font-size: 1.05rem;
   font-weight: 600;

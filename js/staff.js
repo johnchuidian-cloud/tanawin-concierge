@@ -363,7 +363,12 @@ function buildEditor() {
     const v = val(key);
     const msg = textArea(v.message);
     div.appendChild(field('Message', msg));
-    actions(div, key, () => save(key, { message: msg.value.trim() }));
+    actions(div, key, () => save(key, {
+      // Not .trim(): that would strip an indent from the first line while
+      // leaving it on the others. Drop leading blank lines and trailing
+      // whitespace only, so indentation is hers to control.
+      message: msg.value.replace(/^(?:[ \t]*\r?\n)+/, '').replace(/\s+$/, ''),
+    }));
     root.appendChild(div);
   }
 
