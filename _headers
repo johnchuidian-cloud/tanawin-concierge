@@ -1,0 +1,31 @@
+# Security headers for every response. Cloudflare consumes this file as
+# config rather than serving it — /_headers should return 404 once deployed,
+# which is the tell that it was picked up.
+#
+# CSP is REPORT-ONLY for now, deliberately. Concierge is in daily guest use
+# and a wrong policy breaks real screens mid-service; violations log to the
+# console instead. Flip the header name to Content-Security-Policy in a
+# SECOND deploy, once every screen and role has been clicked through.
+#
+# Built from what this app actually loads, verified against the source:
+#   script-src  jsdelivr = supabase-js UMD + qrcode-generator. There are NO
+#               inline <script> blocks in any of the four pages, so no
+#               'unsafe-inline' and no hashes are needed here.
+#   style-src   'unsafe-inline' IS needed: update-check.js injects a <style>
+#               element, and inline style attributes are set in JS (the
+#               rating bars' widths, the banner's body offset).
+#   img-src     Supabase storage serves the Sinagtala map. NOTE: no `data:`
+#               — the QR codes are inline SVG (createSvgTag), not data URLs,
+#               and the guest photo upload was removed on 2026-08-24. The
+#               work order predicted data: would be required here; it is not.
+#   connect-src Supabase REST + auth. No `wss:` on purpose — Concierge runs
+#               no realtime subscription, and if one is ever added this line
+#               must be revisited along with the reason it was avoided.
+#   default-src 'none' so anything overlooked shows up as a report rather
+#               than passing silently.
+/*
+  Content-Security-Policy-Report-Only: default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; font-src 'self'; connect-src 'self' https://lkeuiquqogtevsgvaddf.supabase.co; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
