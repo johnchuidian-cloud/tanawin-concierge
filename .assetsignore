@@ -4,6 +4,14 @@
 # (verified 2026-09-17: /README.md, /db/*.sql, /wrangler.jsonc, /.gitignore
 # all returned 200). App files (html, css/, js/, assets/, _headers) stay out
 # of this list on purpose.
+#
+# .git/ above all: the build clones the repo into the directory it serves, so
+# /.git/config, /.git/HEAD, /.git/index and /.git/logs/HEAD were all live
+# (found by the Menu session 2026-09-17, which had the same hole). That is
+# enough to rebuild the repo's history from the website.
+.git/
+supabase/
+scripts/
 docs/
 db/
 tmp/
