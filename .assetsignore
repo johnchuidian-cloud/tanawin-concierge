@@ -10,6 +10,8 @@
 # (found by the Menu session 2026-09-17, which had the same hole). That is
 # enough to rebuild the repo's history from the website.
 .git/
+.github/
+.claude/
 supabase/
 scripts/
 docs/
