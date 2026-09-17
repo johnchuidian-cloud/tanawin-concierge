@@ -384,14 +384,20 @@ function buildEditor() {
       key_info: 'Good to know',
       menu_card: '"Hungry?" card',
       contact: 'Contact the front desk',
+      requests: 'Request something',
+      feedback: '"How was your stay?" card',
     };
-    const DEFAULT_ORDER = ['wifi', 'house_rules', 'pool_hours', 'getting_around',
-      'key_info', 'menu_card', 'contact'];
+    // Same list the guest page uses, so this block always shows the order
+    // guests actually see, and saving it can't drop a card.
+    const DEFAULT_ORDER = SECTION_ORDER;
     const div = blockShell('Section order', key,
       'Guests see the sections in this order (the round side buttons follow too). Move one with the arrows, then Save.');
     const v = val(key);
+    // Filter on the shared list, NOT on NAMES: a section someone forgot to
+    // label must still appear (under its key) instead of vanishing from here
+    // and being dropped from the saved order.
     let order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)
-      .filter(k => NAMES[k]);
+      .filter(k => DEFAULT_ORDER.includes(k));
     DEFAULT_ORDER.forEach(k => { if (!order.includes(k)) order.push(k); });
 
     const listEl = document.createElement('div');
@@ -414,7 +420,7 @@ function buildEditor() {
         };
         const name = document.createElement('span');
         name.className = 'order-name';
-        name.textContent = `${i + 1}. ${NAMES[k]}`;
+        name.textContent = `${i + 1}. ${NAMES[k] || k}`;
         row.appendChild(name);
         const up = document.createElement('button');
         up.className = 'order-btn';

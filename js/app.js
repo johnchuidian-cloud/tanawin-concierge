@@ -279,8 +279,7 @@ const CARD_FOR = {
 };
 // Default: wifi first (the most-asked question), house rules second,
 // requests third (the third most-asked: room/kitchen items); feedback last.
-const DEFAULT_ORDER = ['wifi', 'house_rules', 'requests', 'pool_hours',
-  'getting_around', 'key_info', 'menu_card', 'contact', 'feedback'];
+const DEFAULT_ORDER = SECTION_ORDER;   // shared with the editor (config.js)
 
 function applyOrder(v) {
   const order = (Array.isArray(v.order) && v.order.length ? v.order : DEFAULT_ORDER)

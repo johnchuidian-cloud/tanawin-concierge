@@ -429,7 +429,13 @@ main .card { scroll-margin-top: 4.2rem; }
   .myreq-row.myreq-flip .myreq-status { animation: none; }
 }
 
-.myreq-status { font-weight: 600; text-align: right; }
+.myreq-status {
+  font-weight: 600;
+  text-align: right;
+  /* The status column is narrow on phones: without this "Acknowledged, on it!"
+     broke as "Acknowledged, on / it!". Older browsers ignore it harmlessly. */
+  text-wrap: balance;
+}
 .myreq-status.st-new { color: var(--ink-muted); }
 .myreq-status.st-acknowledged { color: var(--maroon-soft); }
 .myreq-status.st-done { color: #2E7D32; }

@@ -15,3 +15,12 @@ const ASSETS_BASE = `${SUPABASE_URL}/storage/v1/object/public/concierge-assets`;
 const MENU_URL = 'https://tanawin-menu.tanawinbnb.workers.dev';
 
 const HUB_URL = 'https://tanawin-hub.tanawinbnb.workers.dev';
+
+// Every reorderable section of the guest page, in the default order. The
+// guest page and the editor's "Section order" block BOTH read this one list.
+// They used to keep separate copies, and the editor's lacked 'requests' and
+// 'feedback': when Lexi saved her order on 2026-09-01 those two cards were
+// left out, so guests got them appended at the very bottom. Add a new section
+// here and nowhere else.
+const SECTION_ORDER = ['wifi', 'house_rules', 'requests', 'pool_hours',
+  'getting_around', 'key_info', 'menu_card', 'contact', 'feedback'];
