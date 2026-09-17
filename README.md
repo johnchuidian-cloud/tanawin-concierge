@@ -7,12 +7,34 @@ information first, requests second, with food ordering handed off to the Menu ap
 Part of the Tanawin family: **Finance**, **Kitchen**, **Hub**, **Menu**,
 **Payroll**, **Concierge** (this app).
 
+## Screenshots
+
+Everything shown is made-up data: the rooms, access codes, wifi network and
+password, phone numbers, staff and guest reviews are invented, and the map
+is a placeholder. Captured from the real app pages running against an
+in-memory stand-in for the database.
+
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="docs/screenshots/01-guest-welcome.png" width="200" alt="Welcome card and wifi with a scan-to-join QR"><br><sub>Welcome card and wifi with a scan-to-join QR</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/02-guest-requests.png" width="200" alt="Guest requests with live "My requests" status"><br><sub>Guest requests with live "My requests" status</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/03-guest-request-sheet.png" width="200" alt="Room-items request sheet"><br><sub>Room-items request sheet</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/04-guest-map.png" width="200" alt="Directions and the map marker"><br><sub>Directions and the map marker</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="docs/screenshots/05-staff-editor.png" width="200" alt="Staff editor: guest feedback inbox"><br><sub>Staff editor: guest feedback inbox</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/06-staff-section-order.png" width="200" alt="Staff editor: section order"><br><sub>Staff editor: section order</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/07-room-cards.png" width="200" alt="Room-card printer"><br><sub>Room-card printer</sub></td>
+    <td align="center" valign="top"><img src="docs/screenshots/08-room-card-poster.png" width="200" alt="Printable room card"><br><sub>Printable room card</sub></td>
+  </tr>
+</table>
+
 ## Phase 2 — Guest requests (live)
 
 Room guests (dining codes rejected) submit towel changes, bin clearing, room
 items (Lexi-editable list, tap-checklist + quantity steppers, specify-boxes
-for utensils/appliances/others) and problem reports with a compressed photo —
-all free, capped at 10/room/hour server-side. Requests land interleaved with
+for utensils/appliances/others) and problem reports (description only: photo attachments were removed at
+the owner's request), all free, capped at 10/room/hour server-side. Requests land interleaved with
 food orders in **Menu's** `/staff` dashboard (suite connection #7 — Menu may
 update these rows; the queue, alerts and the 10-minute escalation push are
 Menu-side). Status model: new → acknowledged → done (+cancelled) — plain
@@ -33,11 +55,8 @@ getting-around directions + swappable map, key facts (staff hours, last call,
 breakfast, checkout), front-desk contact buttons, house rules, and a hand-off
 link to the Menu app that carries the room code so guests never retype it.
 
-**Appearance & formatting:** the editor's "Appearance" block (the `display`
-content row) sets guest-view text size (normal/large/xlarge) and background
-(brand tones only — no free color picker, deliberately). Any text field
-accepts Telegram-style inline markers, rendered safely (no innerHTML):
-`**bold**`, `__italic__`, `++underline++`.
+**Formatting:** any text field accepts Telegram-style inline markers,
+rendered safely (no innerHTML): `**bold**`, `__italic__`, `++underline++`.
 
 **Room cards (`cards.html`):** staff-side poster printer (handoff §8). Pick a
 room → landscape short-bond card with the wifi QR (network selectable) and the

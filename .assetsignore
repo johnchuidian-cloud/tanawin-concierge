@@ -1,0 +1,13 @@
+# Files in the repo that must NOT be served on the live guest site.
+# Cloudflare serves the repo root as static assets, so without this list the
+# SQL migrations, README, screenshots and config were all publicly reachable
+# (verified 2026-09-17: /README.md, /db/*.sql, /wrangler.jsonc, /.gitignore
+# all returned 200). App files (html, css/, js/, assets/, _headers) stay out
+# of this list on purpose.
+docs/
+db/
+tmp/
+*.md
+wrangler.jsonc
+.gitignore
+.assetsignore
