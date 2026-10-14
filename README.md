@@ -59,10 +59,12 @@ link to the Menu app that carries the room code so guests never retype it.
 rendered safely (no innerHTML): `**bold**`, `__italic__`, `++underline++`.
 
 **Room cards (`cards.html`):** staff-side poster printer (handoff §8). Pick a
-room → landscape short-bond card with the wifi QR (network selectable) and the
-room's `?code=` deep-link QR → browser print dialog at exact 11×8.5in. This is
-what makes code rotation routine: change a code, print a fresh card. Reads
-`rooms` under the staff session; codes never leave the authenticated page.
+room → landscape card with the wifi QR (network selectable) and the room's
+`?code=` deep-link QR → browser print dialog at exact paper size. A3 is the
+default (the size of the frames in the rooms); short bond is one tap away for
+a printer that cannot take A3. This is what makes code rotation routine:
+change a code, print a fresh card. Reads `rooms` under the staff session;
+codes never leave the authenticated page.
 
 **Admin preview:** the editor's "👁 Guest view" button opens `/?preview=1` in a
 new tab — it reuses the editor's login session to render the guest view exactly

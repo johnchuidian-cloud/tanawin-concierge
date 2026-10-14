@@ -31,9 +31,16 @@
     }
     .net-choice .chip.selected { background: var(--maroon); border-color: var(--maroon); color: var(--cream-on-maroon); }
 
-    /* the poster itself — exact 11x8.5in layout, scaled for screen preview */
+    /* The poster itself, at exact print size. A3 landscape (420x297mm) is the
+       default: that is the size of the frames in the rooms. --k scales every
+       length in the layout up from the original short-bond design, so the whole
+       card grows with the paper instead of sitting small in the middle of a big
+       sheet. --pv is how far the on-screen preview is shrunk. */
+    body { --pw: 420mm; --ph: 297mm; --k: 1.375; --pv: 0.2; }
+    body.size-letter { --pw: 11in; --ph: 8.5in; --k: 1; --pv: 0.3; }
+
     .poster {
-      width: 11in; height: 8.5in; overflow: hidden;
+      width: var(--pw); height: var(--ph); overflow: hidden;
       background: #FBFAF6; color: #1F1B16;
       display: flex; flex-direction: column;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -41,29 +48,44 @@
     .poster .band {
       background: #9A3518; color: #F1E4D6;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0.28in 0.7in;
+      padding: calc(0.28in * var(--k)) calc(0.7in * var(--k));
     }
-    .poster .word { font-size: 34pt; font-weight: 700; letter-spacing: 0.04em; }
+    .poster .word { font-size: calc(34pt * var(--k)); font-weight: 700; letter-spacing: 0.04em; }
     .poster .word .i { position: relative; }
     .poster .word .i .fl { position: absolute; top: -0.5em; left: 46%; transform: translateX(-50%); font-size: 0.5em; }
-    .poster .proom { font-size: 24pt; font-weight: 600; background: rgba(255,255,255,0.14); border-radius: 999px; padding: 0.12in 0.45in; }
-    .poster .panels { flex: 1; display: flex; align-items: stretch; padding: 0.3in 0.7in; gap: 0.7in; min-height: 0; }
-    .poster .panel {
-      flex: 1; background: #fff; border: 2px solid #E6D8C9; border-radius: 0.25in;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 0.18in; padding: 0.25in;
+    .poster .proom {
+      font-size: calc(24pt * var(--k)); font-weight: 600;
+      background: rgba(255,255,255,0.14); border-radius: 999px;
+      padding: calc(0.12in * var(--k)) calc(0.45in * var(--k));
     }
-    .poster .panel h2 { color: #9A3518; font-size: 20pt; margin: 0; }
-    .poster .panel svg { width: 3.35in; height: 3.35in; }
-    .poster .panel p { font-size: 12.5pt; color: #3F392F; text-align: center; line-height: 1.45; max-width: 4.4in; margin: 0; }
-    .poster .pfoot { text-align: center; color: #6E6759; font-size: 10.5pt; padding: 0.05in 0 0.22in; }
+    .poster .panels {
+      flex: 1; display: flex; align-items: stretch; min-height: 0;
+      padding: calc(0.3in * var(--k)) calc(0.7in * var(--k));
+      gap: calc(0.7in * var(--k));
+    }
+    .poster .panel {
+      flex: 1; background: #fff;
+      border: calc(2px * var(--k)) solid #E6D8C9; border-radius: calc(0.25in * var(--k));
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: calc(0.18in * var(--k)); padding: calc(0.25in * var(--k));
+    }
+    .poster .panel h2 { color: #9A3518; font-size: calc(20pt * var(--k)); margin: 0; }
+    .poster .panel svg { width: calc(3.35in * var(--k)); height: calc(3.35in * var(--k)); }
+    .poster .panel p {
+      font-size: calc(12.5pt * var(--k)); color: #3F392F; text-align: center;
+      line-height: 1.45; max-width: calc(4.4in * var(--k)); margin: 0;
+    }
+    .poster .pfoot {
+      text-align: center; color: #6E6759; font-size: calc(10.5pt * var(--k));
+      padding: calc(0.05in * var(--k)) 0 calc(0.22in * var(--k));
+    }
 
     /* on-screen preview: scaled down inside a frame */
     #previewWrap { display: none; margin-top: 1rem; }
     #previewWrap.active { display: block; }
     .preview-frame { width: 100%; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--sand); padding: 0.5rem; }
-    .preview-scale { transform: scale(0.30); transform-origin: top left; width: 11in; height: 8.5in; }
-    .preview-frame .holder { width: calc(11in * 0.30); height: calc(8.5in * 0.30); overflow: hidden; margin: 0 auto; }
+    .preview-scale { transform: scale(var(--pv)); transform-origin: top left; width: var(--pw); height: var(--ph); }
+    .preview-frame .holder { width: calc(var(--pw) * var(--pv)); height: calc(var(--ph) * var(--pv)); overflow: hidden; margin: 0 auto; }
     .print-now {
       width: 100%; margin-top: 0.7rem;
       background: var(--maroon); color: var(--cream-on-maroon); border: none;
@@ -71,15 +93,22 @@
       font-family: inherit; cursor: pointer;
     }
 
-    /* print: ONLY the poster, exact landscape short bond */
+    /* Print: ONLY the poster, at the chosen paper size (the @page rule lives in
+       its own style tag below, because @page cannot be switched by a class).
+       Everything else is display:none, not just hidden: hidden page furniture
+       still takes up space and used to push a blank second sheet out of the
+       printer. The preview frame is unwrapped so the poster prints full size. */
     @media print {
-      @page { size: 11in 8.5in; margin: 0; }
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea { position: absolute; left: 0; top: 0; }
+      #login, .topbar, .ed-note, .ed-field, #roomList, .print-now, #toast { display: none !important; }
+      html, body, #app { margin: 0; padding: 0; background: #fff; }
+      #app main { max-width: none; margin: 0; padding: 0; }
+      #previewWrap { margin: 0; }
+      .preview-frame { border: none; border-radius: 0; background: none; padding: 0; overflow: visible; }
+      .preview-frame .holder { width: auto; height: auto; overflow: visible; margin: 0; }
       .preview-scale { transform: none; }
     }
   </style>
+  <style id="pageSize">@page { size: A3 landscape; margin: 0; }</style>
 </head>
 <body>
 
@@ -110,7 +139,16 @@
       <p class="ed-note">Pick a room to make its printed card: a wifi QR and a
       scan-to-open app QR with that room's code built in. <strong>Whenever a room's
       code changes, print a fresh card</strong> — the old QR stops working the moment
-      the code does. Print at 100% / actual size, landscape short bond.</p>
+      the code does. Print at 100% / actual size, landscape. A3 is the default, to fit the
+      frames in the rooms; switch to short bond if the printer cannot take A3.</p>
+
+      <div class="ed-field">
+        <label>Paper size</label>
+        <div class="net-choice" id="sizeChoice">
+          <button class="chip selected" data-size="a3">A3 (room frames)</button>
+          <button class="chip" data-size="letter">Short bond</button>
+        </div>
+      </div>
 
       <div class="ed-field">
         <label>Wifi network on the card</label>
@@ -133,6 +171,6 @@
   <script src="js/config.js"></script>
   <script src="js/cards.js"></script>
   <script src="js/update-check.js"></script>
-  <!-- build 2026-08-18a -->
+  <!-- build 2026-10-14a -->
 </body>
 </html>

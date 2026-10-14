@@ -3,8 +3,9 @@
 // Auth is Menu's GoTrue, same as the editor. An authenticated staff session
 // can read rooms (incl. codes) and the wifi content; the poster composes a
 // WIFI: QR + the room's ?code= deep-link QR, printed via the browser's print
-// dialog at exact 11x8.5in. This is what makes code rotation routine: change
-// a code, print a fresh card, swap the paper.
+// dialog at exact paper size: A3 landscape by default, to fit the frames in
+// the rooms, with short bond still available. This is what makes code
+// rotation routine: change a code, print a fresh card, swap the paper.
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = id => document.getElementById(id);
@@ -215,5 +216,26 @@ function showPoster(room) {
   $('previewWrap').classList.add('active');
   $('previewWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// ---------- paper size ----------
+// A3 landscape is the default: that is the size of the frames in the rooms.
+// Short bond stays available for a printer that cannot take A3. @page cannot be
+// switched by a body class, so the rule itself is rewritten here, and the body
+// class rescales the poster's own lengths (see --k in cards.html).
+
+const PAGE_SIZES = { a3: 'A3 landscape', letter: '11in 8.5in' };
+
+function setPaperSize(size) {
+  if (!PAGE_SIZES[size]) size = 'a3';
+  document.body.classList.toggle('size-letter', size === 'letter');
+  $('pageSize').textContent = `@page { size: ${PAGE_SIZES[size]}; margin: 0; }`;
+  $('sizeChoice').querySelectorAll('.chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.size === size);
+  });
+}
+
+$('sizeChoice').querySelectorAll('.chip').forEach(c => {
+  c.onclick = () => setPaperSize(c.dataset.size);
+});
 
 $('printBtn').onclick = () => window.print();
